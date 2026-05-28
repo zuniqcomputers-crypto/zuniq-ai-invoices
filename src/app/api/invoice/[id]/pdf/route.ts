@@ -10,13 +10,10 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
   const pdfBuffer = await generateInvoicePDF(invoice.toObject());
 
-  // Convert Buffer to ArrayBuffer for NextResponse
-  const pdfArrayBuffer = pdfBuffer.buffer.slice(
-    pdfBuffer.byteOffset,
-    pdfBuffer.byteOffset + pdfBuffer.byteLength
-  );
+  // Convert Node.js Buffer to a proper ArrayBuffer
+  const arrayBuffer = new Uint8Array(pdfBuffer).buffer;
 
-  return new NextResponse(pdfArrayBuffer, {
+  return new NextResponse(arrayBuffer, {
     headers: {
       "Content-Type": "application/pdf",
       "Content-Disposition": `attachment; filename=invoice-${params.id}.pdf`,
