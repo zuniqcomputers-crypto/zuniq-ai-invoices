@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const MONGODB_URI = process.env.MONGODB_URI!;
 if (!MONGODB_URI) throw new Error("Please define MONGODB_URI in .env.local");
 
-// Fix: TypeScript doesn't like `global.mongoose` without declaration
+// Fix TypeScript error by using 'any' for global.mongoose
 let cached = (global as any).mongoose;
 if (!cached) {
   cached = (global as any).mongoose = { conn: null, promise: null };
