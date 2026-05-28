@@ -8,3 +8,4 @@ export async function GET(req: NextRequest) {
   const invoices = await Invoice.find({ session_id: getSessionId() }).sort({ createdAt: -1 });
   return NextResponse.json({ invoices });
 }
+export const dynamic = 'force-dynamic';
