@@ -12,6 +12,7 @@ export default function NewInvoice() {
   });
 
   const [messages, setMessages] = useState([{ sender: "ai", text: "Hello! Let's create your invoice. What is your business name?" }]);
+  const [showPreview, setShowPreview] = useState(false); // mobile toggle
 
   const handleSend = async (msg: string) => {
     setMessages([...messages, { sender: "user", text: msg }]);
@@ -45,16 +46,31 @@ export default function NewInvoice() {
   const isComplete = !!invoiceData.business_name && !!invoiceData.client_name && invoiceData.items.length > 0;
 
   return (
-    <div className="flex h-screen">
-      <div className="w-1/2 border-r flex flex-col">
-        <div className="p-4 bg-blue-600 text-white font-bold text-lg">🤖 AI Invoice Assistant</div>
+    <div className="flex flex-col md:flex-row h-screen">
+      {/* Chat Section – always visible */}
+      <div className="w-full md:w-1/2 border-b md:border-b-0 md:border-r flex flex-col h-full">
+        <div className="p-4 bg-blue-600 text-white font-bold text-lg flex justify-between items-center">
+          <span>🤖 AI Invoice Assistant</span>
+          {/* Preview toggle button (visible only on mobile) */}
+          <button
+            className="md:hidden text-sm bg-white text-blue-600 px-3 py-1 rounded"
+            onClick={() => setShowPreview(!showPreview)}
+          >
+            {showPreview ? "Hide Preview" : "Show Preview"}
+          </button>
+        </div>
         <ChatWindow messages={messages} onSend={handleSend} onFinalize={handleFinalize} isComplete={isComplete} />
       </div>
-      <div className="w-1/2 p-6 overflow-auto bg-white">
+
+      {/* Preview Section – hidden on mobile unless toggled */}
+      <div className={`w-full md:w-1/2 p-4 md:p-6 overflow-auto bg-white ${showPreview ? 'block' : 'hidden'} md:block`}>
         <h2 className="text-2xl font-bold mb-4">📄 Live Preview</h2>
         <InvoicePreview data={invoiceData} />
         {isComplete && (
-          <button onClick={handleFinalize} className="mt-6 bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg">
+          <button
+            onClick={handleFinalize}
+            className="mt-6 w-full md:w-auto bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg"
+          >
             Save & Finalize Invoice
           </button>
         )}
