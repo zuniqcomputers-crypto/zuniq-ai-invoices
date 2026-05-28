@@ -1,20 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
-import { processChat, InvoiceData } from "@/utils/ai";
+import dbConnect from "@/lib/db";
+import Invoice from "@/models/Invoice";
+import { generateInvoicePDF } from "@/utils/pdfGenerator";
 
-export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const { message, currentData, conversationHistory = [] } = body as {
-    message: string;
-    currentData: InvoiceData;
-    conversationHistory: string[];
-  };
+export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+  await dbConnect();
+  const invoice = await Invoice.findOne({ invoice_id: params.id });
+  if (!invoice) return new NextResponse("Not found", { status: 404 });
 
-  if (!message) return NextResponse.json({ error: "Message required" }, { status: 400 });
+  const pdfBuffer = await generateInvoicePDF(invoice.toObject());
 
-  try {
-    const result = processChat(message, currentData, conversationHistory);
-    return NextResponse.json(result);
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
-  }
+  // Convert Node.js Buffer to a proper ArrayBuffer
+  const arrayBuffer = new Uint8Array(pdfBuffer).buffer;
+
+  return new NextResponse(arrayBuffer, {
+    headers: {
+      "Content-Type": "application/pdf",
+      "Content-Disposition": `attachment; filename=invoice-${params.id}.pdf`,
+    },
+  });
 }
