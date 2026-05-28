@@ -9,7 +9,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   if (!invoice) return new NextResponse("Not found", { status: 404 });
 
   const pdfBuffer = await generateInvoicePDF(invoice.toObject());
-  return new NextResponse(pdfBuffer, {
+  return new NextResponse(pdfBuffer.buffer, {
     headers: {
       "Content-Type": "application/pdf",
       "Content-Disposition": `attachment; filename=invoice-${params.id}.pdf`,
