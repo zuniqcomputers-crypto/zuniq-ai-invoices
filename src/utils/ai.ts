@@ -22,7 +22,6 @@ function calculateTotals(data: InvoiceData) {
   return { subtotal, total };
 }
 
-// Keep all the parsing helpers from the original (parseDate, extractCurrency, extractNumber)
 function parseDate(text: string): string | null {
   const match = text.match(/\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}|\d{4}[\/\-\.]\d{1,2}[\/\-\.]\d{1,2}|\d{1,2}\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{4}/i);
   return match ? match[0] : null;
@@ -47,20 +46,14 @@ function extractNumber(text: string): number | null {
   return match ? parseFloat(match[0]) : null;
 }
 
-// ---------- Conversational helpers ----------
+// Common greetings, thanks, etc.
 const greetings = ["hello", "hi", "hey", "good morning", "good afternoon", "good evening", "yo"];
 const thanks = ["thanks", "thank you", "thx", "appreciate"];
-const affirmations = ["yes", "yeah", "yep", "sure", "ok", "okay", "fine"];
-const negations = ["no", "nah", "nope"];
+function isGreeting(t: string) { return greetings.some(g => t.toLowerCase().includes(g)); }
+function isThanks(t: string) { return thanks.some(g => t.toLowerCase().includes(g)); }
 
-function isGreeting(text: string): boolean {
-  return greetings.some(g => text.toLowerCase().includes(g));
-}
-function isThanks(text: string): boolean {
-  return thanks.some(t => text.toLowerCase().includes(t));
-}
-
-function getMissingFieldQuestion(data: InvoiceData): string | null {
+// Get the first missing field question
+function getMissingQuestion(data: InvoiceData): string | null {
   if (!data.business_name) return "What is your business name?";
   if (!data.business_email) return "What's your business email?";
   if (!data.client_name) return "Who is the client?";
@@ -73,60 +66,70 @@ function getMissingFieldQuestion(data: InvoiceData): string | null {
   if (data.discount === 0) return "Any discount amount?";
   if (!data.due_date) return "What is the due date? (e.g., 2026-06-01)";
   if (!data.notes) return "Any additional notes for the invoice?";
-  return null; // all fields filled
+  return null;
 }
 
-// Main AI processor – now conversational
+// Check if the last AI message was the same question (to avoid repetition)
+function lastAiWasSameQuestion(history: string[], question: string): boolean {
+  if (history.length === 0) return false;
+  const last = history[history.length - 1];
+  return last === question;
+}
+
+// Provide hints for common "stuck" situations
+function getHint(question: string): string {
+  const hints: Record<string, string> = {
+    "What is your business name?": "Just tell me the name of your business or your own name.",
+    "What's your business email?": "I need an email address for your business (e.g., hello@example.com).",
+    "Who is the client?": "Tell me the client's name (e.g., 'client is Ali' or just 'Ali').",
+    "What is the client's email?": "The client's email address.",
+    "What is the client's address?": "The client's physical address or city.",
+    "What service did you provide? And how much did you charge?": "Describe the service and the price, like 'Logo design for 5000 PKR'.",
+    "Which currency should we use?": "USD, EUR, PKR, INR, etc.",
+    "Any tax percentage?": "If you charged tax, what percentage? (e.g., '10% tax')",
+    "Any discount amount?": "If you gave a discount, how much? (e.g., '5% discount')",
+    "What is the due date?": "When should the client pay? (e.g., '2026-06-15')",
+    "Any additional notes for the invoice?": "Anything extra, like payment terms or a thank you note.",
+  };
+  return hints[question] || "Just type your answer naturally.";
+}
+
 export function processChat(
   msg: string,
   currentData: InvoiceData,
-  _history: string[]
+  history: string[]
 ): { reply: string; updatedData: InvoiceData } {
-  const data = { ...currentData, items: currentData.items.map(i => ({...i})) };
+  const data = { ...currentData, items: currentData.items.map(i => ({ ...i })) };
   const t = msg.trim().toLowerCase();
 
-  // 1. Handle greetings
+  // 1. Greetings
   if (isGreeting(t)) {
-    const nextQ = getMissingFieldQuestion(data);
+    const nextQ = getMissingQuestion(data);
     return {
       reply: nextQ
-        ? `Hello! Let's create your invoice. ${nextQ}`
+        ? `Hello! Let's get started. ${nextQ}`
         : "Hello! All invoice details are filled. Feel free to review and finalize.",
       updatedData: data,
     };
   }
 
-  // 2. Handle thanks
+  // 2. Thanks
   if (isThanks(t)) {
     return {
-      reply: "You're welcome! 😊 Anything else you'd like to change?",
+      reply: "You're welcome! 😊 Anything else you need?",
       updatedData: data,
     };
   }
 
-  // 3. Handle "not sure", "what?", "help", etc.
-  if (t.match(/not sure|what do you mean|help|idk|i don't know/i)) {
-    const nextQ = getMissingFieldQuestion(data);
+  // 3. Help / "not sure"
+  if (t.match(/not sure|what do you mean|help|idk|i don't know|confused/i)) {
+    const nextQ = getMissingQuestion(data);
     if (!nextQ) return { reply: "All set! You can review and finalize.", updatedData: data };
-    // Provide a hint based on the next question
-    const hints: Record<string, string> = {
-      "What is your business name?": "Just tell me the name of your business or your own name.",
-      "What's your business email?": "I need an email address for your business (e.g., hello@example.com).",
-      "Who is the client?": "Tell me the client's name (e.g., 'client is Ali').",
-      "What is the client's email?": "The client's email address.",
-      "What is the client's address?": "The client's physical address or just their city.",
-      "What service did you provide? And how much did you charge?": "Describe the service and the price, like 'Logo design for 5000 PKR'.",
-      "Which currency should we use?": "USD, EUR, PKR, INR, etc.",
-      "Any tax percentage?": "If you charged tax, what percentage? (e.g., '10% tax')",
-      "Any discount amount?": "If you gave a discount, how much? (e.g., '5% discount')",
-      "What is the due date?": "When should the client pay? (e.g., '2026-06-15')",
-      "Any additional notes for the invoice?": "Anything extra to mention, like payment terms or a thank you note.",
-    };
-    const hint = hints[nextQ] || "Just type your answer.";
+    const hint = getHint(nextQ);
     return { reply: `No worries! ${hint}`, updatedData: data };
   }
 
-  // 4. Try to extract information from the message (same as before)
+  // ---------- Extract information ----------
   // Business name
   if (!data.business_name) {
     const m = t.match(/(?:my business|company|i am|i'm) (?:is |called )?([A-Za-z0-9 &]+)/i);
@@ -192,26 +195,23 @@ export function processChat(
   data.subtotal = subtotal;
   data.total = total;
 
-  // 5. After extraction, decide what to say next
-  const nextQuestion = getMissingFieldQuestion(data);
-  if (nextQuestion) {
-    // If nothing was extracted from the last message (i.e., the message didn't fill any field),
-    // gently let the user know.
-    const anyFieldChanged = JSON.stringify(data) !== JSON.stringify(currentData);
-    if (!anyFieldChanged) {
-      // No data extracted; maybe user typed something irrelevant
-      return {
-        reply: `I didn't quite catch that. ${nextQuestion}`,
-        updatedData: data,
-      };
+  // ---------- Decide next reply ----------
+  const nextQ = getMissingQuestion(data);
+  const anyChange = JSON.stringify(data) !== JSON.stringify(currentData);
+
+  if (nextQ) {
+    // If no data was extracted and the same question was asked last time, give a hint
+    if (!anyChange && lastAiWasSameQuestion(history, nextQ)) {
+      const hint = getHint(nextQ);
+      return { reply: `I still need that info. ${hint}`, updatedData: data };
     }
-    // Something was extracted, so continue
-    return { reply: `Got it! ${nextQuestion}`, updatedData: data };
+    // Normal flow: ask the next question
+    return { reply: nextQ, updatedData: data };
   }
 
   // All fields filled
   return {
-    reply: "All information collected! You can review your invoice on the right. Want to make any changes or finalize?",
+    reply: "All information collected! You can review your invoice on the right. Want to make changes or finalize?",
     updatedData: data,
   };
 }
