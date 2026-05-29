@@ -46,13 +46,11 @@ function extractNumber(text: string): number | null {
   return match ? parseFloat(match[0]) : null;
 }
 
-// Common greetings, thanks, etc.
 const greetings = ["hello", "hi", "hey", "good morning", "good afternoon", "good evening", "yo"];
 const thanks = ["thanks", "thank you", "thx", "appreciate"];
 function isGreeting(t: string) { return greetings.some(g => t.toLowerCase().includes(g)); }
 function isThanks(t: string) { return thanks.some(g => t.toLowerCase().includes(g)); }
 
-// Get the first missing field question
 function getMissingQuestion(data: InvoiceData): string | null {
   if (!data.business_name) return "What is your business name?";
   if (!data.business_email) return "What's your business email?";
@@ -69,14 +67,6 @@ function getMissingQuestion(data: InvoiceData): string | null {
   return null;
 }
 
-// Check if the last AI message was the same question (to avoid repetition)
-function lastAiWasSameQuestion(history: string[], question: string): boolean {
-  if (history.length === 0) return false;
-  const last = history[history.length - 1];
-  return last === question;
-}
-
-// Provide hints for common "stuck" situations
 function getHint(question: string): string {
   const hints: Record<string, string> = {
     "What is your business name?": "Just tell me the name of your business or your own name.",
@@ -89,7 +79,7 @@ function getHint(question: string): string {
     "Any tax percentage?": "If you charged tax, what percentage? (e.g., '10% tax')",
     "Any discount amount?": "If you gave a discount, how much? (e.g., '5% discount')",
     "What is the due date?": "When should the client pay? (e.g., '2026-06-15')",
-    "Any additional notes for the invoice?": "Anything extra, like payment terms or a thank you note.",
+    "Any additional notes for the invoice?": "You can type 'thanks' or 'payment due in 30 days' or just 'no'.",
   };
   return hints[question] || "Just type your answer naturally.";
 }
@@ -102,7 +92,7 @@ export function processChat(
   const data = { ...currentData, items: currentData.items.map(i => ({ ...i })) };
   const t = msg.trim().toLowerCase();
 
-  // 1. Greetings
+  // Greetings
   if (isGreeting(t)) {
     const nextQ = getMissingQuestion(data);
     return {
@@ -113,7 +103,7 @@ export function processChat(
     };
   }
 
-  // 2. Thanks
+  // Thanks
   if (isThanks(t)) {
     return {
       reply: "You're welcome! 😊 Anything else you need?",
@@ -121,7 +111,7 @@ export function processChat(
     };
   }
 
-  // 3. Help / "not sure"
+  // Help / "not sure"
   if (t.match(/not sure|what do you mean|help|idk|i don't know|confused/i)) {
     const nextQ = getMissingQuestion(data);
     if (!nextQ) return { reply: "All set! You can review and finalize.", updatedData: data };
@@ -129,7 +119,34 @@ export function processChat(
     return { reply: `No worries! ${hint}`, updatedData: data };
   }
 
-  // ---------- Extract information ----------
+  // ---- Special handling: if the last question was "notes" and user answers anything, accept it ----
+  const lastMissingQ = getMissingQuestion(data);
+  if (lastMissingQ && lastMissingQ.includes("notes")) {
+    // Accept any non-empty answer as the note
+    if (msg.trim().length > 0) {
+      // If the user says something like "no", "none", "nothing" – set notes to empty or "N/A"
+      if (/^(no|none|nothing)$/i.test(msg.trim())) {
+        data.notes = "";  // or "N/A"
+      } else {
+        data.notes = msg.trim();
+      }
+      // Recalculate totals (notes doesn't affect totals)
+      const { subtotal, total } = calculateTotals(data);
+      data.subtotal = subtotal;
+      data.total = total;
+
+      // Now all fields should be filled
+      return {
+        reply: "All information collected! You can review your invoice on the right. Want to make changes or finalize?",
+        updatedData: data,
+      };
+    } else {
+      // User sent empty message – prompt again
+      return { reply: "Please enter a note, or type 'none' if there's nothing to add.", updatedData: data };
+    }
+  }
+
+  // ---- Normal extraction ----
   // Business name
   if (!data.business_name) {
     const m = t.match(/(?:my business|company|i am|i'm) (?:is |called )?([A-Za-z0-9 &]+)/i);
@@ -190,26 +207,25 @@ export function processChat(
 
   if (!data.issue_date) data.issue_date = new Date().toISOString().split("T")[0];
 
-  // Recalculate totals
+  // Recalculate
   const { subtotal, total } = calculateTotals(data);
   data.subtotal = subtotal;
   data.total = total;
 
-  // ---------- Decide next reply ----------
+  // Determine next question
   const nextQ = getMissingQuestion(data);
   const anyChange = JSON.stringify(data) !== JSON.stringify(currentData);
 
   if (nextQ) {
-    // If no data was extracted and the same question was asked last time, give a hint
-    if (!anyChange && lastAiWasSameQuestion(history, nextQ)) {
+    // Avoid repeating the exact same question
+    if (!anyChange && history.length > 0 && history[history.length - 1] === nextQ) {
       const hint = getHint(nextQ);
       return { reply: `I still need that info. ${hint}`, updatedData: data };
     }
-    // Normal flow: ask the next question
     return { reply: nextQ, updatedData: data };
   }
 
-  // All fields filled
+  // All done
   return {
     reply: "All information collected! You can review your invoice on the right. Want to make changes or finalize?",
     updatedData: data,
