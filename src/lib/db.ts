@@ -1,3 +1,4 @@
+// Fix applied: 2026-05-29 08:00 UTC
 import mongoose from "mongoose";
 
 const MONGODB_URI = process.env.MONGODB_URI!;
