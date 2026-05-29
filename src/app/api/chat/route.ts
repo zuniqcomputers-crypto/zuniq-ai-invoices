@@ -1,24 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
-import dbConnect from "@/lib/db";
-import Invoice from "@/models/Invoice";
-import { generateInvoicePDF } from "@/utils/pdfGenerator";
+import { processChat, InvoiceData } from "@/utils/ai";
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
-  await dbConnect();
-  const invoice = await Invoice.findOne({ invoice_id: params.id });
-  if (!invoice) return new NextResponse("Not found", { status: 404 });
+// Force dynamic to avoid static prerendering issues
+export const dynamic = "force-dynamic";
 
-  const pdfBuffer = await generateInvoicePDF(invoice.toObject());
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const { message, currentData, conversationHistory = [] } = body as {
+      message: string;
+      currentData: InvoiceData;
+      conversationHistory: string[];
+    };
 
-  // Convert Node.js Buffer to a proper ArrayBuffer
-  const arrayBuffer = new Uint8Array(pdfBuffer).buffer;
+    if (!message) {
+      return NextResponse.json({ error: "Message required" }, { status: 400 });
+    }
 
-  return new NextResponse(arrayBuffer, {
-    headers: {
-      "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename=invoice-${params.id}.pdf`,
-    },
-  });
+    const result = processChat(message, currentData, conversationHistory);
+    return NextResponse.json(result);
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message || "Server error" }, { status: 500 });
+  }
 }
 
-export const dynamic = 'force-dynamic';
+// If any other method is used, return 405
+export async function GET() {
+  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
+}
