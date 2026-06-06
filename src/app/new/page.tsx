@@ -60,7 +60,7 @@ export default function NewInvoice() {
 
   return (
     <div className="flex flex-col h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Info Modal (fancy) */}
+      {/* Info Modal */}
       {showInfo && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4" onClick={() => setShowInfo(false)}>
           <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 animate-fade-in" onClick={(e) => e.stopPropagation()}>
@@ -90,9 +90,10 @@ export default function NewInvoice() {
 
       {/* Header */}
       <header className="px-5 py-4 bg-white/80 backdrop-blur-md border-b border-gray-200 flex items-center justify-between shadow-sm">
-       <div className="h-9 w-9 rounded-xl overflow-hidden shadow-lg">
-  <img src="/logo.png" alt="Logo" className="h-full w-full object-cover" />
-</div>
+        <div className="flex items-center gap-2">
+          <div className="h-9 w-9 rounded-xl overflow-hidden shadow-lg">
+            <img src="/logo.png" alt="Logo" className="h-full w-full object-cover" />
+          </div>
           <h1 className="text-xl font-bold text-gray-800">AI Invoice Assistant</h1>
         </div>
         <button onClick={() => setShowInfo(true)} className="h-9 w-9 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition">
