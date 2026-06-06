@@ -2,11 +2,13 @@ export interface InvoiceData {
   invoice_id: string;
   business_name: string;
   business_email: string;
-  business_phone: string;   // new
-  trn_number: string;        // new
+  business_phone: string;
+  trn_number: string;
+  business_logo_url: string;   // NEW
+  qr_code_data: string;         // NEW
   client_name: string;
   client_email: string;
-  client_phone: string;      // new
+  client_phone: string;
   client_address: string;
   items: { description: string; quantity: number; unit_price: number }[];
   subtotal: number;
@@ -16,7 +18,7 @@ export interface InvoiceData {
   currency: string;
   due_date: string;
   issue_date: string;
-  notes: string;             // we'll use this for payment instructions
+  notes: string;
 }
 
 const fieldOrder: { key: keyof InvoiceData; question: string; hint: string }[] = [
@@ -24,6 +26,7 @@ const fieldOrder: { key: keyof InvoiceData; question: string; hint: string }[] =
   { key: "business_email", question: "What's your business email?", hint: "e.g. official@example.com" },
   { key: "business_phone", question: "What's your business phone number?", hint: "e.g. 00971507024817" },
   { key: "trn_number", question: "What is your TRN (Tax Registration Number)?", hint: "e.g. 104790700900001" },
+  { key: "business_logo_url", question: "Do you have a logo? Paste its URL (or type 'skip')", hint: "e.g. https://example.com/logo.png" },
   { key: "client_name", question: "Who is the client?", hint: "Client's full name." },
   { key: "client_email", question: "What is the client's email?", hint: "Client email address." },
   { key: "client_phone", question: "What is the client's phone number?", hint: "e.g. 056 950 5008" },
@@ -33,6 +36,7 @@ const fieldOrder: { key: keyof InvoiceData; question: string; hint: string }[] =
   { key: "tax_percentage", question: "Any tax percentage? (just the number, or 0 for none)", hint: "e.g. 5" },
   { key: "discount", question: "Any discount amount?", hint: "e.g. 100 or 0 for none" },
   { key: "due_date", question: "What is the due date? (e.g., 2026-06-15)", hint: "Date format: YYYY-MM-DD" },
+  { key: "qr_code_data", question: "Any QR code? Enter text or URL to encode (or type 'none')", hint: "e.g. your payment link" },
   { key: "notes", question: "Any payment instructions or additional notes?", hint: "e.g. 'Credit, payment due within 30 days'" },
 ];
 
@@ -59,7 +63,6 @@ function applyAnswer(data: InvoiceData, fieldIndex: number, answer: string) {
   const trimmed = answer.trim();
 
   if (key === "items") {
-    // Keep existing parsing
     const parts = trimmed.match(/^(.+?)\s+(\d+(?:\.\d+)?)\s*$/);
     if (parts) {
       data.items = [{ description: parts[1], quantity: 1, unit_price: parseFloat(parts[2]) }];
