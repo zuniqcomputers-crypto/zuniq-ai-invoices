@@ -11,8 +11,13 @@ export interface IInvoice extends Document {
   session_id: string;
   business_name: string;
   business_email: string;
+  business_phone: string;
+  trn_number: string;
+  business_logo_url: string;   // NEW
+  qr_code_data: string;         // NEW
   client_name: string;
   client_email: string;
+  client_phone: string;
   client_address: string;
   items: IInvoiceItem[];
   subtotal: number;
@@ -38,8 +43,13 @@ const InvoiceSchema = new Schema<IInvoice>({
   session_id: { type: String, required: true, index: true },
   business_name: { type: String, default: "" },
   business_email: { type: String, default: "" },
+  business_phone: { type: String, default: "" },
+  trn_number: { type: String, default: "" },
+  business_logo_url: { type: String, default: "" },
+  qr_code_data: { type: String, default: "" },
   client_name: { type: String, default: "" },
   client_email: { type: String, default: "" },
+  client_phone: { type: String, default: "" },
   client_address: { type: String, default: "" },
   items: [InvoiceItemSchema],
   subtotal: { type: Number, default: 0 },
