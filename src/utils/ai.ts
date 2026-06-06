@@ -16,7 +16,6 @@ export interface InvoiceData {
   notes: string;
 }
 
-// Order of questions – each answer will be stored exactly as the user types
 const fieldOrder: { key: keyof InvoiceData; question: string; hint: string }[] = [
   { key: "business_name", question: "What is your business name?", hint: "Your company or personal name." },
   { key: "business_email", question: "What's your business email?", hint: "e.g. hello@example.com" },
@@ -36,28 +35,26 @@ function getNextMissing(data: InvoiceData): number {
     const key = fieldOrder[i].key;
     const val = data[key];
     if (key === "items") {
-      // Items need special check: at least one item with description and price
-      if (data.items.length === 0 || data.items.every((item) => !item.description || item.unit_price === 0)) {
-        return i;
-      }
+      // Check if there is at least one item with a non‑empty description
+      const hasDescription = data.items.length > 0 && data.items.some(item => item.description.trim() !== "");
+      if (!hasDescription) return i;
     } else if (typeof val === "string" && val.trim() === "") {
       return i;
-    } else if (typeof val === "number" && val === 0 && key !== "tax_percentage" && key !== "discount") {
-      // For tax/discount, 0 is a valid answer, so we don't treat it as missing
-      // For others like currency (not a number), ignore
+    } else if (key === "currency" && (typeof val !== "string" || val.trim() === "")) {
+      return i;
     }
+    // For numbers (tax, discount), 0 is a valid answer, so we don't treat them as missing
   }
-  return -1; // all fields filled
+  return -1;
 }
 
-// Process a raw user answer for a field
 function applyAnswer(data: InvoiceData, fieldIndex: number, answer: string) {
   const key = fieldOrder[fieldIndex].key;
   const trimmed = answer.trim();
 
   if (key === "items") {
-    // Try to extract a description and price from the answer
-    // But if parsing fails, just use the whole answer as description with 0 price
+    // Accept any answer: use it as the description, set price to 0
+    // If the user included a price, we try to extract it, but if we can't, that's okay
     const parts = trimmed.match(/^(.+?)\s+(\d+(?:\.\d+)?)\s*$/);
     if (parts) {
       data.items = [{
@@ -66,6 +63,7 @@ function applyAnswer(data: InvoiceData, fieldIndex: number, answer: string) {
         unit_price: parseFloat(parts[2]),
       }];
     } else {
+      // No clear price at the end – just store the whole thing as description
       data.items = [{
         description: trimmed,
         quantity: 1,
@@ -74,16 +72,11 @@ function applyAnswer(data: InvoiceData, fieldIndex: number, answer: string) {
     }
   } else if (key === "tax_percentage" || key === "discount") {
     const num = parseFloat(trimmed);
-    if (!isNaN(num)) {
-      (data as any)[key] = num;
-    } else {
-      (data as any)[key] = 0; // default to 0 if not a number
-    }
+    (data as any)[key] = isNaN(num) ? 0 : num;
   } else if (key === "currency") {
-    // Accept any string as currency, uppercase it
     data.currency = trimmed.toUpperCase() || "USD";
   } else {
-    // For string fields: business_name, emails, client_name, address, due_date, notes
+    // All string fields: just store the answer
     (data as any)[key] = trimmed;
   }
 }
@@ -97,7 +90,7 @@ export function processChat(
   const t = msg.trim();
   const lower = t.toLowerCase();
 
-  // Handle greetings / thanks
+  // Greetings
   if (["hello", "hi", "hey", "good morning", "good afternoon", "good evening", "yo"].some(g => lower.includes(g))) {
     const nextIdx = getNextMissing(data);
     return {
@@ -107,11 +100,13 @@ export function processChat(
       updatedData: data,
     };
   }
+
+  // Thanks
   if (["thanks", "thank you", "thx", "appreciate"].some(g => lower.includes(g))) {
     return { reply: "You're welcome! 😊", updatedData: data };
   }
 
-  // Help request
+  // Help
   if (["help", "not sure", "what do you mean", "idk", "i don't know", "confused"].some(phrase => lower.includes(phrase))) {
     const nextIdx = getNextMissing(data);
     if (nextIdx === -1) return { reply: "All set! You can finalize the invoice.", updatedData: data };
@@ -122,20 +117,7 @@ export function processChat(
   const missingIdx = getNextMissing(data);
 
   if (missingIdx === -1) {
-    // All fields filled
-    return {
-      reply: "All information collected! You can review your invoice on the right. Want to make changes or finalize?",
-      updatedData: data,
-    };
-  }
-
-  // The user's message is the answer to the missing field
-  applyAnswer(data, missingIdx, t);
-
-  // Move to the next question
-  const nextIdx = getNextMissing(data);
-  if (nextIdx === -1) {
-    // Recalculate totals before final
+    // All fields filled – recalculate totals
     const subtotal = data.items.reduce((sum, i) => sum + i.quantity * i.unit_price, 0);
     const total = subtotal + (subtotal * data.tax_percentage / 100) - data.discount;
     data.subtotal = subtotal;
@@ -146,13 +128,24 @@ export function processChat(
     };
   }
 
-  // Recalculate totals after every answer
+  // Apply the user's answer to the missing field
+  applyAnswer(data, missingIdx, t);
+
+  // After answering, recalculate totals
   const subtotal = data.items.reduce((sum, i) => sum + i.quantity * i.unit_price, 0);
   const total = subtotal + (subtotal * data.tax_percentage / 100) - data.discount;
   data.subtotal = subtotal;
   data.total = total;
 
-  // Ask the next question
+  // Find the next missing field
+  const nextIdx = getNextMissing(data);
+  if (nextIdx === -1) {
+    return {
+      reply: "All information collected! You can review your invoice on the right. Want to make changes or finalize?",
+      updatedData: data,
+    };
+  }
+
   return {
     reply: fieldOrder[nextIdx].question,
     updatedData: data,
