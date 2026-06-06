@@ -4,12 +4,12 @@ import InvoicePreview from "@/components/InvoicePreview";
 import { InvoiceData } from "@/utils/ai";
 
 export default function NewInvoice() {
-  const [invoiceData, setInvoiceData] = useState<InvoiceData>({
-    invoice_id: "", business_name: "", business_email: "", client_name: "", client_email: "",
-    client_address: "", items: [], subtotal: 0, tax_percentage: 0, discount: 0, total: 0,
-    currency: "USD", due_date: "", issue_date: new Date().toISOString().split("T")[0], notes: ""
+  const   const [invoiceData, setInvoiceData] = useState<InvoiceData>({
+    invoice_id: "", business_name: "", business_email: "", business_phone: "", trn_number: "",
+    client_name: "", client_email: "", client_phone: "", client_address: "",
+    items: [], subtotal: 0, tax_percentage: -1, discount: -1, total: 0,
+    currency: "", due_date: "", issue_date: new Date().toISOString().split("T")[0], notes: ""
   });
-
   const [messages, setMessages] = useState([{ sender: "ai", text: "Hello! Let's create your invoice. What is your business name?" }]);
   const [input, setInput] = useState("");
   const [showPreview, setShowPreview] = useState(false);
@@ -245,8 +245,7 @@ function InvoiceEditForm({
   removeItem: (index: number) => void;
 }) {
   return (
-    <div className="space-y-5">
-      {/* Business Details */}
+          {/* Business Details */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-xs font-semibold text-gray-500 mb-1">Business Name</label>
@@ -256,8 +255,15 @@ function InvoiceEditForm({
           <label className="block text-xs font-semibold text-gray-500 mb-1">Business Email</label>
           <input value={data.business_email} onChange={(e) => updateField("business_email", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
+        <div>
+          <label className="block text-xs font-semibold text-gray-500 mb-1">Business Phone</label>
+          <input value={data.business_phone} onChange={(e) => updateField("business_phone", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-gray-500 mb-1">TRN Number</label>
+          <input value={data.trn_number} onChange={(e) => updateField("trn_number", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
       </div>
-
       {/* Client Details */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
@@ -267,6 +273,10 @@ function InvoiceEditForm({
         <div>
           <label className="block text-xs font-semibold text-gray-500 mb-1">Client Email</label>
           <input value={data.client_email} onChange={(e) => updateField("client_email", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-gray-500 mb-1">Client Phone</label>
+          <input value={data.client_phone} onChange={(e) => updateField("client_phone", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
         <div className="sm:col-span-2">
           <label className="block text-xs font-semibold text-gray-500 mb-1">Client Address</label>
