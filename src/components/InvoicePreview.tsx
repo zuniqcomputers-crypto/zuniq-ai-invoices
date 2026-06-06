@@ -2,49 +2,102 @@ import { InvoiceData } from "@/utils/ai";
 
 export default function InvoicePreview({ data }: { data: InvoiceData }) {
   return (
-    <div className="border rounded-xl p-6 shadow-sm bg-white text-gray-700 text-sm">
-      <div className="flex justify-between items-start mb-6">
-        <div>
-          <h3 className="text-xl font-bold text-gray-900">{data.business_name || "Your Business"}</h3>
-          <p>{data.business_email}</p>
-        </div>
-        <div className="text-right">
-          <p className="font-bold text-lg">INVOICE</p>
-          <p># {data.invoice_id || "ZIQ-0001"}</p>
-          <p>Date: {data.issue_date}</p>
-          <p>Due: {data.due_date || "—"}</p>
-        </div>
-      </div>
-      <div className="grid grid-cols-2 mb-6">
-        <div>
-          <p className="font-semibold">Bill To:</p>
-          <p>{data.client_name || "Client Name"}</p>
-          <p>{data.client_email}</p>
-          <p>{data.client_address}</p>
+    <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+      {/* Header */}
+      <div className="bg-gray-900 text-white px-6 py-5">
+        <div className="flex justify-between items-start">
+          <div>
+            <h3 className="text-xl font-bold">{data.business_name || "Your Business"}</h3>
+            {data.business_email && <p className="text-indigo-200 text-xs mt-1">{data.business_email}</p>}
+          </div>
+          <div className="text-right">
+            <div className="text-2xl font-bold tracking-wider">INVOICE</div>
+            <div className="text-indigo-200 text-sm mt-1">#{data.invoice_id || "ZIQ-0001"}</div>
+          </div>
         </div>
       </div>
-      <table className="w-full mb-4 border-t">
-        <thead><tr className="border-b text-left"><th className="py-2">Description</th><th className="py-2">Qty</th><th className="py-2">Unit Price</th><th className="py-2">Amount</th></tr></thead>
-        <tbody>
-          {data.items.length === 0 ? (
-            <tr><td colSpan={4} className="py-4 text-center text-gray-400 italic">No items added yet</td></tr>
-          ) : data.items.map((item, idx) => (
-            <tr key={idx} className="border-b">
-              <td className="py-2">{item.description || "Service"}</td>
-              <td className="py-2">{item.quantity}</td>
-              <td className="py-2">{data.currency} {item.unit_price.toFixed(2)}</td>
-              <td className="py-2">{data.currency} {(item.quantity * item.unit_price).toFixed(2)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <div className="flex flex-col items-end space-y-1">
-        <p>Subtotal: {data.currency} {data.subtotal.toFixed(2)}</p>
-        <p>Tax ({data.tax_percentage}%): {data.currency} {((data.subtotal * data.tax_percentage) / 100).toFixed(2)}</p>
-        <p>Discount: {data.currency} {data.discount.toFixed(2)}</p>
-        <p className="font-bold text-lg border-t pt-1">Total: {data.currency} {data.total.toFixed(2)}</p>
+
+      <div className="p-6 space-y-5">
+        {/* Dates & Client */}
+        <div className="flex justify-between text-sm">
+          <div>
+            <p className="text-gray-400 text-xs uppercase tracking-wider font-semibold">Issue Date</p>
+            <p className="font-medium text-gray-800">{data.issue_date || "—"}</p>
+          </div>
+          <div>
+            <p className="text-gray-400 text-xs uppercase tracking-wider font-semibold">Due Date</p>
+            <p className="font-medium text-gray-800">{data.due_date || "—"}</p>
+          </div>
+          <div className="text-right">
+            <p className="text-gray-400 text-xs uppercase tracking-wider font-semibold">Bill To</p>
+            <p className="font-medium text-gray-800">{data.client_name || "Client Name"}</p>
+            {data.client_email && <p className="text-gray-500 text-xs">{data.client_email}</p>}
+            {data.client_address && <p className="text-gray-500 text-xs">{data.client_address}</p>}
+          </div>
+        </div>
+
+        {/* Items Table */}
+        <div className="border-t border-gray-100 pt-4">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-gray-400 text-xs uppercase tracking-wider border-b border-gray-50">
+                <th className="py-2 font-semibold">Description</th>
+                <th className="py-2 font-semibold text-center">Qty</th>
+                <th className="py-2 font-semibold text-right">Unit Price</th>
+                <th className="py-2 font-semibold text-right">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.items.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="py-6 text-center text-gray-300 italic">No items added yet</td>
+                </tr>
+              ) : (
+                data.items.map((item, idx) => (
+                  <tr key={idx} className="border-b border-gray-50">
+                    <td className="py-3 text-gray-800">{item.description || "Service"}</td>
+                    <td className="py-3 text-center text-gray-600">{item.quantity}</td>
+                    <td className="py-3 text-right text-gray-600">{data.currency} {item.unit_price.toFixed(2)}</td>
+                    <td className="py-3 text-right font-medium text-gray-800">{data.currency} {(item.quantity * item.unit_price).toFixed(2)}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Totals */}
+        <div className="border-t border-gray-200 pt-4 space-y-1 text-sm">
+          <div className="flex justify-between text-gray-600">
+            <span>Subtotal</span>
+            <span>{data.currency} {data.subtotal.toFixed(2)}</span>
+          </div>
+          {data.tax_percentage > 0 && (
+            <div className="flex justify-between text-gray-600">
+              <span>Tax ({data.tax_percentage}%)</span>
+              <span>{data.currency} {((data.subtotal * data.tax_percentage) / 100).toFixed(2)}</span>
+            </div>
+          )}
+          {data.discount > 0 && (
+            <div className="flex justify-between text-gray-600">
+              <span>Discount</span>
+              <span>-{data.currency} {data.discount.toFixed(2)}</span>
+            </div>
+          )}
+          <div className="flex justify-between text-lg font-bold text-gray-900 pt-2 border-t border-gray-200">
+            <span>Total</span>
+            <span>{data.currency} {data.total.toFixed(2)}</span>
+          </div>
+        </div>
+
+        {/* Notes */}
+        {data.notes && (
+          <div className="border-t border-gray-100 pt-4 text-xs text-gray-500">
+            <p className="font-semibold text-gray-400 mb-1">Notes</p>
+            <p>{data.notes}</p>
+          </div>
+        )}
       </div>
-      {data.notes && <div className="mt-6 border-t pt-3 text-xs text-gray-500">Notes: {data.notes}</div>}
     </div>
   );
 }
