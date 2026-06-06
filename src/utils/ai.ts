@@ -2,8 +2,11 @@ export interface InvoiceData {
   invoice_id: string;
   business_name: string;
   business_email: string;
+  business_phone: string;   // new
+  trn_number: string;        // new
   client_name: string;
   client_email: string;
+  client_phone: string;      // new
   client_address: string;
   items: { description: string; quantity: number; unit_price: number }[];
   subtotal: number;
@@ -13,21 +16,24 @@ export interface InvoiceData {
   currency: string;
   due_date: string;
   issue_date: string;
-  notes: string;
+  notes: string;             // we'll use this for payment instructions
 }
 
 const fieldOrder: { key: keyof InvoiceData; question: string; hint: string }[] = [
-  { key: "business_name", question: "What is your business name?", hint: "Your company or personal name." },
-  { key: "business_email", question: "What's your business email?", hint: "e.g. hello@example.com" },
-  { key: "client_name", question: "Who is the client?", hint: "The client's full name." },
+  { key: "business_name", question: "What is your business name?", hint: "e.g. Pharmacos Skincare Trading FZC" },
+  { key: "business_email", question: "What's your business email?", hint: "e.g. official@example.com" },
+  { key: "business_phone", question: "What's your business phone number?", hint: "e.g. 00971507024817" },
+  { key: "trn_number", question: "What is your TRN (Tax Registration Number)?", hint: "e.g. 104790700900001" },
+  { key: "client_name", question: "Who is the client?", hint: "Client's full name." },
   { key: "client_email", question: "What is the client's email?", hint: "Client email address." },
+  { key: "client_phone", question: "What is the client's phone number?", hint: "e.g. 056 950 5008" },
   { key: "client_address", question: "What is the client's address?", hint: "City or full address." },
-  { key: "currency", question: "Which currency should we use? (USD, EUR, PKR, etc.)", hint: "e.g. USD" },
-  { key: "items", question: "What service did you provide? Describe it and the price.", hint: "e.g. Logo design 5000 PKR" },
-  { key: "tax_percentage", question: "Any tax percentage? (just the number)", hint: "e.g. 10" },
-  { key: "discount", question: "Any discount amount?", hint: "e.g. 100 or 5%" },
+  { key: "currency", question: "Which currency should we use? (USD, EUR, AED, etc.)", hint: "e.g. AED" },
+  { key: "items", question: "What service or products did you provide? Describe the items and prices.", hint: "e.g. Disaar sunscreen 2 x 11.50 AED" },
+  { key: "tax_percentage", question: "Any tax percentage? (just the number, or 0 for none)", hint: "e.g. 5" },
+  { key: "discount", question: "Any discount amount?", hint: "e.g. 100 or 0 for none" },
   { key: "due_date", question: "What is the due date? (e.g., 2026-06-15)", hint: "Date format: YYYY-MM-DD" },
-  { key: "notes", question: "Any additional notes for the invoice?", hint: "Payment terms, thank you note, etc." },
+  { key: "notes", question: "Any payment instructions or additional notes?", hint: "e.g. 'Credit, payment due within 30 days'" },
 ];
 
 function getNextMissing(data: InvoiceData): number {
@@ -35,15 +41,15 @@ function getNextMissing(data: InvoiceData): number {
     const key = fieldOrder[i].key;
     const val = data[key];
     if (key === "items") {
-      // Check if there is at least one item with a non‑empty description
       const hasDescription = data.items.length > 0 && data.items.some(item => item.description.trim() !== "");
       if (!hasDescription) return i;
+    } else if (key === "tax_percentage" || key === "discount") {
+      if (val === -1) return i;
+    } else if (key === "currency") {
+      if (typeof val !== "string" || val.trim() === "") return i;
     } else if (typeof val === "string" && val.trim() === "") {
       return i;
-    } else if (key === "currency" && (typeof val !== "string" || val.trim() === "")) {
-      return i;
     }
-    // For numbers (tax, discount), 0 is a valid answer, so we don't treat them as missing
   }
   return -1;
 }
@@ -53,30 +59,19 @@ function applyAnswer(data: InvoiceData, fieldIndex: number, answer: string) {
   const trimmed = answer.trim();
 
   if (key === "items") {
-    // Accept any answer: use it as the description, set price to 0
-    // If the user included a price, we try to extract it, but if we can't, that's okay
+    // Keep existing parsing
     const parts = trimmed.match(/^(.+?)\s+(\d+(?:\.\d+)?)\s*$/);
     if (parts) {
-      data.items = [{
-        description: parts[1],
-        quantity: 1,
-        unit_price: parseFloat(parts[2]),
-      }];
+      data.items = [{ description: parts[1], quantity: 1, unit_price: parseFloat(parts[2]) }];
     } else {
-      // No clear price at the end – just store the whole thing as description
-      data.items = [{
-        description: trimmed,
-        quantity: 1,
-        unit_price: 0,
-      }];
+      data.items = [{ description: trimmed, quantity: 1, unit_price: 0 }];
     }
   } else if (key === "tax_percentage" || key === "discount") {
     const num = parseFloat(trimmed);
     (data as any)[key] = isNaN(num) ? 0 : num;
   } else if (key === "currency") {
-    data.currency = trimmed.toUpperCase() || "USD";
+    data.currency = trimmed.toUpperCase() || "AED";
   } else {
-    // All string fields: just store the answer
     (data as any)[key] = trimmed;
   }
 }
@@ -113,11 +108,11 @@ export function processChat(
     return { reply: `No problem! ${fieldOrder[nextIdx].hint}`, updatedData: data };
   }
 
-  // Find the first missing field
+  // Find first missing field
   const missingIdx = getNextMissing(data);
 
   if (missingIdx === -1) {
-    // All fields filled – recalculate totals
+    // All fields filled – recalc totals
     const subtotal = data.items.reduce((sum, i) => sum + i.quantity * i.unit_price, 0);
     const total = subtotal + (subtotal * data.tax_percentage / 100) - data.discount;
     data.subtotal = subtotal;
@@ -128,16 +123,16 @@ export function processChat(
     };
   }
 
-  // Apply the user's answer to the missing field
+  // Apply the answer
   applyAnswer(data, missingIdx, t);
 
-  // After answering, recalculate totals
+  // Recalculate totals
   const subtotal = data.items.reduce((sum, i) => sum + i.quantity * i.unit_price, 0);
   const total = subtotal + (subtotal * data.tax_percentage / 100) - data.discount;
   data.subtotal = subtotal;
   data.total = total;
 
-  // Find the next missing field
+  // Next missing
   const nextIdx = getNextMissing(data);
   if (nextIdx === -1) {
     return {
