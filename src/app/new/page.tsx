@@ -4,25 +4,52 @@ import InvoicePreview from "@/components/InvoicePreview";
 import { InvoiceData } from "@/utils/ai";
 
 export default function NewInvoice() {
-  const   const [invoiceData, setInvoiceData] = useState<InvoiceData>({
-    invoice_id: "", business_name: "", business_email: "", business_phone: "", trn_number: "",
-    client_name: "", client_email: "", client_phone: "", client_address: "",
-    items: [], subtotal: 0, tax_percentage: -1, discount: -1, total: 0,
-    currency: "", due_date: "", issue_date: new Date().toISOString().split("T")[0], notes: ""
+  const [invoiceData, setInvoiceData] = useState<InvoiceData>({
+    invoice_id: "",
+    business_name: "",
+    business_email: "",
+    business_phone: "",
+    trn_number: "",
+    client_name: "",
+    client_email: "",
+    client_phone: "",
+    client_address: "",
+    items: [],
+    subtotal: 0,
+    tax_percentage: -1,
+    discount: -1,
+    total: 0,
+    currency: "",
+    due_date: "",
+    issue_date: new Date().toISOString().split("T")[0],
+    notes: ""
   });
-  const [messages, setMessages] = useState([{ sender: "ai", text: "Hello! Let's create your invoice. What is your business name?" }]);
+
+  const [messages, setMessages] = useState([
+    { sender: "ai", text: "Hello! Let's create your invoice. What is your business name?" }
+  ]);
   const [input, setInput] = useState("");
   const [showPreview, setShowPreview] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
-  const isComplete = !!invoiceData.business_name && !!invoiceData.client_name && invoiceData.items.length > 0;
-  useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
+  const isComplete =
+    !!invoiceData.business_name &&
+    !!invoiceData.client_name &&
+    invoiceData.items.length > 0;
 
-  // Recalculate totals whenever invoice data changes
   useEffect(() => {
-    const subtotal = invoiceData.items.reduce((sum, i) => sum + i.quantity * i.unit_price, 0);
-    const total = subtotal + (subtotal * invoiceData.tax_percentage / 100) - invoiceData.discount;
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  // Recalculate totals whenever items, tax, or discount change
+  useEffect(() => {
+    const subtotal = invoiceData.items.reduce(
+      (sum, i) => sum + i.quantity * i.unit_price,
+      0
+    );
+    const total =
+      subtotal + (subtotal * invoiceData.tax_percentage) / 100 - invoiceData.discount;
     setInvoiceData(prev => ({ ...prev, subtotal, total }));
   }, [invoiceData.items, invoiceData.tax_percentage, invoiceData.discount]);
 
@@ -36,11 +63,18 @@ export default function NewInvoice() {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text, currentData: invoiceData, conversationHistory: [] }),
+        body: JSON.stringify({
+          message: text,
+          currentData: invoiceData,
+          conversationHistory: []
+        })
       });
       const data = await res.json();
       if (data.error) {
-        setMessages([...newMessages, { sender: "ai", text: "Sorry, something went wrong." }]);
+        setMessages([
+          ...newMessages,
+          { sender: "ai", text: "Sorry, something went wrong." }
+        ]);
       } else {
         setInvoiceData(data.updatedData);
         setMessages([...newMessages, { sender: "ai", text: data.reply }]);
@@ -54,25 +88,22 @@ export default function NewInvoice() {
     const res = await fetch("/api/invoice/create", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(invoiceData),
+      body: JSON.stringify(invoiceData)
     });
     if (res.ok) window.location.href = "/";
     else alert("Failed to save.");
   };
 
-  // Update a field in invoice data
   const updateField = (field: keyof InvoiceData, value: any) => {
     setInvoiceData(prev => ({ ...prev, [field]: value }));
   };
 
-  // Update an item in the items array
   const updateItem = (index: number, field: string, value: any) => {
     const newItems = [...invoiceData.items];
     newItems[index] = { ...newItems[index], [field]: value };
     setInvoiceData(prev => ({ ...prev, items: newItems }));
   };
 
-  // Add a new item
   const addItem = () => {
     setInvoiceData(prev => ({
       ...prev,
@@ -80,7 +111,6 @@ export default function NewInvoice() {
     }));
   };
 
-  // Remove an item
   const removeItem = (index: number) => {
     const newItems = invoiceData.items.filter((_, i) => i !== index);
     setInvoiceData(prev => ({ ...prev, items: newItems }));
@@ -104,12 +134,17 @@ export default function NewInvoice() {
       {/* Chat Area */}
       <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4 bg-gradient-to-b from-gray-50 to-white">
         {messages.map((msg, i) => (
-          <div key={i} className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"} animate-fade-in`}>
-            <div className={`max-w-[80%] px-4 py-3 rounded-2xl text-sm leading-relaxed shadow-sm ${
-              msg.sender === "user"
-                ? "bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-br-md"
-                : "bg-white text-gray-800 rounded-bl-md border border-gray-100 shadow-sm"
-            }`}>
+          <div
+            key={i}
+            className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"} animate-fade-in`}
+          >
+            <div
+              className={`max-w-[80%] px-4 py-3 rounded-2xl text-sm leading-relaxed shadow-sm ${
+                msg.sender === "user"
+                  ? "bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-br-md"
+                  : "bg-white text-gray-800 rounded-bl-md border border-gray-100 shadow-sm"
+              }`}
+            >
               {msg.text}
             </div>
           </div>
@@ -121,16 +156,22 @@ export default function NewInvoice() {
       <div className="px-4 py-3 bg-white/80 backdrop-blur-lg border-t border-gray-200 flex items-center gap-2">
         <input
           value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleSend()}
+          onChange={e => setInput(e.target.value)}
+          onKeyDown={e => e.key === "Enter" && handleSend()}
           placeholder="Type your answer..."
           className="flex-1 h-12 px-4 rounded-xl border-0 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm transition"
         />
-        <button onClick={handleSend} className="h-12 w-12 rounded-xl bg-gray-900 text-white flex items-center justify-center shadow-lg hover:bg-gray-800 active:scale-95 transition">
+        <button
+          onClick={handleSend}
+          className="h-12 w-12 rounded-xl bg-gray-900 text-white flex items-center justify-center shadow-lg hover:bg-gray-800 active:scale-95 transition"
+        >
           ➤
         </button>
         {isComplete && (
-          <button onClick={handleFinalize} className="h-12 px-5 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 text-white font-semibold shadow-lg active:scale-95 transition text-sm">
+          <button
+            onClick={handleFinalize}
+            className="h-12 px-5 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 text-white font-semibold shadow-lg active:scale-95 transition text-sm"
+          >
             Finalize ✨
           </button>
         )}
@@ -138,7 +179,10 @@ export default function NewInvoice() {
 
       {/* Floating Preview Button (Mobile) */}
       {!showPreview && (
-        <button onClick={() => setShowPreview(true)} className="md:hidden fixed bottom-24 right-5 h-14 w-14 rounded-full bg-gray-900 text-white shadow-2xl flex items-center justify-center animate-bounce-gentle z-40">
+        <button
+          onClick={() => setShowPreview(true)}
+          className="md:hidden fixed bottom-24 right-5 h-14 w-14 rounded-full bg-gray-900 text-white shadow-2xl flex items-center justify-center animate-bounce-gentle z-40"
+        >
           <span className="text-xl">📄</span>
         </button>
       )}
@@ -152,16 +196,27 @@ export default function NewInvoice() {
             </h2>
             <div className="flex items-center gap-2">
               {!editMode && (
-                <button onClick={() => setEditMode(true)} className="text-xs px-3 py-1 rounded-full bg-indigo-100 text-indigo-700 font-medium">
+                <button
+                  onClick={() => setEditMode(true)}
+                  className="text-xs px-3 py-1 rounded-full bg-indigo-100 text-indigo-700 font-medium"
+                >
                   ✏️ Edit
                 </button>
               )}
               {editMode && (
-                <button onClick={() => setEditMode(false)} className="text-xs px-3 py-1 rounded-full bg-gray-200 text-gray-700 font-medium">
+                <button
+                  onClick={() => setEditMode(false)}
+                  className="text-xs px-3 py-1 rounded-full bg-gray-200 text-gray-700 font-medium"
+                >
                   👁 Preview
                 </button>
               )}
-              <button onClick={() => setShowPreview(false)} className="text-gray-400 hover:text-gray-600 text-2xl">×</button>
+              <button
+                onClick={() => setShowPreview(false)}
+                className="text-gray-400 hover:text-gray-600 text-2xl"
+              >
+                ×
+              </button>
             </div>
           </div>
           <div className="p-4">
@@ -177,7 +232,10 @@ export default function NewInvoice() {
               <>
                 <InvoicePreview data={invoiceData} />
                 {isComplete && (
-                  <button onClick={handleFinalize} className="mt-4 w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 text-white font-semibold shadow-lg">
+                  <button
+                    onClick={handleFinalize}
+                    className="mt-4 w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 text-white font-semibold shadow-lg"
+                  >
                     Save & Finalize Invoice
                   </button>
                 )}
@@ -195,12 +253,18 @@ export default function NewInvoice() {
           </h2>
           <div className="flex items-center gap-2">
             {!editMode && (
-              <button onClick={() => setEditMode(true)} className="text-sm px-4 py-2 rounded-lg bg-indigo-100 text-indigo-700 font-medium hover:bg-indigo-200 transition">
+              <button
+                onClick={() => setEditMode(true)}
+                className="text-sm px-4 py-2 rounded-lg bg-indigo-100 text-indigo-700 font-medium hover:bg-indigo-200 transition"
+              >
                 ✏️ Edit
               </button>
             )}
             {editMode && (
-              <button onClick={() => setEditMode(false)} className="text-sm px-4 py-2 rounded-lg bg-gray-200 text-gray-700 font-medium hover:bg-gray-300 transition">
+              <button
+                onClick={() => setEditMode(false)}
+                className="text-sm px-4 py-2 rounded-lg bg-gray-200 text-gray-700 font-medium hover:bg-gray-300 transition"
+              >
                 👁 Preview
               </button>
             )}
@@ -219,7 +283,10 @@ export default function NewInvoice() {
           <>
             <InvoicePreview data={invoiceData} />
             {isComplete && (
-              <button onClick={handleFinalize} className="mt-6 w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 text-white font-semibold shadow-lg">
+              <button
+                onClick={handleFinalize}
+                className="mt-6 w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 text-white font-semibold shadow-lg"
+              >
                 Save & Finalize Invoice
               </button>
             )}
@@ -236,7 +303,7 @@ function InvoiceEditForm({
   updateField,
   updateItem,
   addItem,
-  removeItem,
+  removeItem
 }: {
   data: InvoiceData;
   updateField: (field: keyof InvoiceData, value: any) => void;
@@ -245,42 +312,92 @@ function InvoiceEditForm({
   removeItem: (index: number) => void;
 }) {
   return (
-          {/* Business Details */}
+    <div className="space-y-5">
+      {/* Business Details */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="block text-xs font-semibold text-gray-500 mb-1">Business Name</label>
-          <input value={data.business_name} onChange={(e) => updateField("business_name", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <label className="block text-xs font-semibold text-gray-500 mb-1">
+            Business Name
+          </label>
+          <input
+            value={data.business_name}
+            onChange={e => updateField("business_name", e.target.value)}
+            className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-gray-500 mb-1">Business Email</label>
-          <input value={data.business_email} onChange={(e) => updateField("business_email", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <label className="block text-xs font-semibold text-gray-500 mb-1">
+            Business Email
+          </label>
+          <input
+            value={data.business_email}
+            onChange={e => updateField("business_email", e.target.value)}
+            className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-gray-500 mb-1">Business Phone</label>
-          <input value={data.business_phone} onChange={(e) => updateField("business_phone", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <label className="block text-xs font-semibold text-gray-500 mb-1">
+            Business Phone
+          </label>
+          <input
+            value={data.business_phone}
+            onChange={e => updateField("business_phone", e.target.value)}
+            className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-gray-500 mb-1">TRN Number</label>
-          <input value={data.trn_number} onChange={(e) => updateField("trn_number", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <label className="block text-xs font-semibold text-gray-500 mb-1">
+            TRN Number
+          </label>
+          <input
+            value={data.trn_number}
+            onChange={e => updateField("trn_number", e.target.value)}
+            className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
         </div>
       </div>
+
       {/* Client Details */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="block text-xs font-semibold text-gray-500 mb-1">Client Name</label>
-          <input value={data.client_name} onChange={(e) => updateField("client_name", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <label className="block text-xs font-semibold text-gray-500 mb-1">
+            Client Name
+          </label>
+          <input
+            value={data.client_name}
+            onChange={e => updateField("client_name", e.target.value)}
+            className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-gray-500 mb-1">Client Email</label>
-          <input value={data.client_email} onChange={(e) => updateField("client_email", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <label className="block text-xs font-semibold text-gray-500 mb-1">
+            Client Email
+          </label>
+          <input
+            value={data.client_email}
+            onChange={e => updateField("client_email", e.target.value)}
+            className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-gray-500 mb-1">Client Phone</label>
-          <input value={data.client_phone} onChange={(e) => updateField("client_phone", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <label className="block text-xs font-semibold text-gray-500 mb-1">
+            Client Phone
+          </label>
+          <input
+            value={data.client_phone}
+            onChange={e => updateField("client_phone", e.target.value)}
+            className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
         </div>
         <div className="sm:col-span-2">
-          <label className="block text-xs font-semibold text-gray-500 mb-1">Client Address</label>
-          <input value={data.client_address} onChange={(e) => updateField("client_address", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <label className="block text-xs font-semibold text-gray-500 mb-1">
+            Client Address
+          </label>
+          <input
+            value={data.client_address}
+            onChange={e => updateField("client_address", e.target.value)}
+            className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
         </div>
       </div>
 
@@ -288,7 +405,12 @@ function InvoiceEditForm({
       <div>
         <div className="flex justify-between items-center mb-2">
           <label className="text-xs font-semibold text-gray-500">Items</label>
-          <button onClick={addItem} className="text-xs px-3 py-1 rounded-lg bg-indigo-100 text-indigo-700 font-medium hover:bg-indigo-200 transition">+ Add Item</button>
+          <button
+            onClick={addItem}
+            className="text-xs px-3 py-1 rounded-lg bg-indigo-100 text-indigo-700 font-medium hover:bg-indigo-200 transition"
+          >
+            + Add Item
+          </button>
         </div>
         <div className="space-y-3">
           {data.items.map((item, idx) => (
@@ -297,7 +419,7 @@ function InvoiceEditForm({
                 <input
                   placeholder="Description"
                   value={item.description}
-                  onChange={(e) => updateItem(idx, "description", e.target.value)}
+                  onChange={e => updateItem(idx, "description", e.target.value)}
                   className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
@@ -306,7 +428,9 @@ function InvoiceEditForm({
                   type="number"
                   placeholder="Qty"
                   value={item.quantity}
-                  onChange={(e) => updateItem(idx, "quantity", parseFloat(e.target.value) || 0)}
+                  onChange={e =>
+                    updateItem(idx, "quantity", parseFloat(e.target.value) || 0)
+                  }
                   className="w-full h-10 px-2 rounded-lg border border-gray-200 text-sm text-center focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
@@ -315,12 +439,19 @@ function InvoiceEditForm({
                   type="number"
                   placeholder="Price"
                   value={item.unit_price}
-                  onChange={(e) => updateItem(idx, "unit_price", parseFloat(e.target.value) || 0)}
+                  onChange={e =>
+                    updateItem(idx, "unit_price", parseFloat(e.target.value) || 0)
+                  }
                   className="w-full h-10 px-2 rounded-lg border border-gray-200 text-sm text-center focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
               <div className="col-span-1 text-right">
-                <button onClick={() => removeItem(idx)} className="text-red-500 hover:text-red-700 font-bold">×</button>
+                <button
+                  onClick={() => removeItem(idx)}
+                  className="text-red-500 hover:text-red-700 font-bold"
+                >
+                  ×
+                </button>
               </div>
             </div>
           ))}
@@ -330,20 +461,28 @@ function InvoiceEditForm({
       {/* Tax & Discount */}
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-xs font-semibold text-gray-500 mb-1">Tax (%)</label>
+          <label className="block text-xs font-semibold text-gray-500 mb-1">
+            Tax (%)
+          </label>
           <input
             type="number"
             value={data.tax_percentage}
-            onChange={(e) => updateField("tax_percentage", parseFloat(e.target.value) || 0)}
+            onChange={e =>
+              updateField("tax_percentage", parseFloat(e.target.value) || 0)
+            }
             className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-gray-500 mb-1">Discount</label>
+          <label className="block text-xs font-semibold text-gray-500 mb-1">
+            Discount
+          </label>
           <input
             type="number"
             value={data.discount}
-            onChange={(e) => updateField("discount", parseFloat(e.target.value) || 0)}
+            onChange={e =>
+              updateField("discount", parseFloat(e.target.value) || 0)
+            }
             className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
         </div>
@@ -352,20 +491,24 @@ function InvoiceEditForm({
       {/* Dates */}
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-xs font-semibold text-gray-500 mb-1">Issue Date</label>
+          <label className="block text-xs font-semibold text-gray-500 mb-1">
+            Issue Date
+          </label>
           <input
             type="date"
             value={data.issue_date}
-            onChange={(e) => updateField("issue_date", e.target.value)}
+            onChange={e => updateField("issue_date", e.target.value)}
             className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-gray-500 mb-1">Due Date</label>
+          <label className="block text-xs font-semibold text-gray-500 mb-1">
+            Due Date
+          </label>
           <input
             type="date"
             value={data.due_date}
-            onChange={(e) => updateField("due_date", e.target.value)}
+            onChange={e => updateField("due_date", e.target.value)}
             className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
         </div>
@@ -376,7 +519,7 @@ function InvoiceEditForm({
         <label className="block text-xs font-semibold text-gray-500 mb-1">Notes</label>
         <textarea
           value={data.notes}
-          onChange={(e) => updateField("notes", e.target.value)}
+          onChange={e => updateField("notes", e.target.value)}
           rows={2}
           className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
         />
