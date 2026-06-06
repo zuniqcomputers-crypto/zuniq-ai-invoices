@@ -26,7 +26,10 @@ export default function Dashboard() {
       <div className="max-w-6xl mx-auto">
         <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-800">⚡ Zuniq AI Invoices</h1>
+          <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-2">
+  <img src="/logo.png" alt="Logo" className="h-8 w-8 object-contain" />
+  Zuniq AI Invoices
+</h1>
             <p className="text-gray-500 text-sm mt-1">Create and manage invoices effortlessly</p>
           </div>
           <Link
