@@ -10,6 +10,8 @@ export default function NewInvoice() {
     business_email: "",
     business_phone: "",
     trn_number: "",
+    business_logo_url: "",
+    qr_code_data: "",
     client_name: "",
     client_email: "",
     client_phone: "",
@@ -49,7 +51,7 @@ export default function NewInvoice() {
       0
     );
     const total =
-      subtotal + (subtotal * invoiceData.tax_percentage) / 100 - invoiceData.discount;
+      subtotal + (subtotal * Math.max(0, invoiceData.tax_percentage)) / 100 - (invoiceData.discount || 0);
     setInvoiceData(prev => ({ ...prev, subtotal, total }));
   }, [invoiceData.items, invoiceData.tax_percentage, invoiceData.discount]);
 
@@ -316,88 +318,44 @@ function InvoiceEditForm({
       {/* Business Details */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="block text-xs font-semibold text-gray-500 mb-1">
-            Business Name
-          </label>
-          <input
-            value={data.business_name}
-            onChange={e => updateField("business_name", e.target.value)}
-            className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
+          <label className="block text-xs font-semibold text-gray-500 mb-1">Business Name</label>
+          <input value={data.business_name} onChange={e => updateField("business_name", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-gray-500 mb-1">
-            Business Email
-          </label>
-          <input
-            value={data.business_email}
-            onChange={e => updateField("business_email", e.target.value)}
-            className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
+          <label className="block text-xs font-semibold text-gray-500 mb-1">Business Email</label>
+          <input value={data.business_email} onChange={e => updateField("business_email", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-gray-500 mb-1">
-            Business Phone
-          </label>
-          <input
-            value={data.business_phone}
-            onChange={e => updateField("business_phone", e.target.value)}
-            className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
+          <label className="block text-xs font-semibold text-gray-500 mb-1">Business Phone</label>
+          <input value={data.business_phone} onChange={e => updateField("business_phone", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-gray-500 mb-1">
-            TRN Number
-          </label>
-          <input
-            value={data.trn_number}
-            onChange={e => updateField("trn_number", e.target.value)}
-            className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
+          <label className="block text-xs font-semibold text-gray-500 mb-1">TRN Number</label>
+          <input value={data.trn_number} onChange={e => updateField("trn_number", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+        <div className="sm:col-span-2">
+          <label className="block text-xs font-semibold text-gray-500 mb-1">Business Logo URL</label>
+          <input value={data.business_logo_url} onChange={e => updateField("business_logo_url", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="https://... (optional)" />
         </div>
       </div>
 
       {/* Client Details */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="block text-xs font-semibold text-gray-500 mb-1">
-            Client Name
-          </label>
-          <input
-            value={data.client_name}
-            onChange={e => updateField("client_name", e.target.value)}
-            className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
+          <label className="block text-xs font-semibold text-gray-500 mb-1">Client Name</label>
+          <input value={data.client_name} onChange={e => updateField("client_name", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-gray-500 mb-1">
-            Client Email
-          </label>
-          <input
-            value={data.client_email}
-            onChange={e => updateField("client_email", e.target.value)}
-            className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
+          <label className="block text-xs font-semibold text-gray-500 mb-1">Client Email</label>
+          <input value={data.client_email} onChange={e => updateField("client_email", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-gray-500 mb-1">
-            Client Phone
-          </label>
-          <input
-            value={data.client_phone}
-            onChange={e => updateField("client_phone", e.target.value)}
-            className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
+          <label className="block text-xs font-semibold text-gray-500 mb-1">Client Phone</label>
+          <input value={data.client_phone} onChange={e => updateField("client_phone", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
         <div className="sm:col-span-2">
-          <label className="block text-xs font-semibold text-gray-500 mb-1">
-            Client Address
-          </label>
-          <input
-            value={data.client_address}
-            onChange={e => updateField("client_address", e.target.value)}
-            className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
+          <label className="block text-xs font-semibold text-gray-500 mb-1">Client Address</label>
+          <input value={data.client_address} onChange={e => updateField("client_address", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
       </div>
 
@@ -405,53 +363,22 @@ function InvoiceEditForm({
       <div>
         <div className="flex justify-between items-center mb-2">
           <label className="text-xs font-semibold text-gray-500">Items</label>
-          <button
-            onClick={addItem}
-            className="text-xs px-3 py-1 rounded-lg bg-indigo-100 text-indigo-700 font-medium hover:bg-indigo-200 transition"
-          >
-            + Add Item
-          </button>
+          <button onClick={addItem} className="text-xs px-3 py-1 rounded-lg bg-indigo-100 text-indigo-700 font-medium hover:bg-indigo-200 transition">+ Add Item</button>
         </div>
         <div className="space-y-3">
           {data.items.map((item, idx) => (
             <div key={idx} className="grid grid-cols-12 gap-2 items-center">
               <div className="col-span-5">
-                <input
-                  placeholder="Description"
-                  value={item.description}
-                  onChange={e => updateItem(idx, "description", e.target.value)}
-                  className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
+                <input placeholder="Description" value={item.description} onChange={e => updateItem(idx, "description", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
               </div>
               <div className="col-span-2">
-                <input
-                  type="number"
-                  placeholder="Qty"
-                  value={item.quantity}
-                  onChange={e =>
-                    updateItem(idx, "quantity", parseFloat(e.target.value) || 0)
-                  }
-                  className="w-full h-10 px-2 rounded-lg border border-gray-200 text-sm text-center focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
+                <input type="number" placeholder="Qty" value={item.quantity} onChange={e => updateItem(idx, "quantity", parseFloat(e.target.value) || 0)} className="w-full h-10 px-2 rounded-lg border border-gray-200 text-sm text-center focus:outline-none focus:ring-2 focus:ring-indigo-500" />
               </div>
               <div className="col-span-3">
-                <input
-                  type="number"
-                  placeholder="Price"
-                  value={item.unit_price}
-                  onChange={e =>
-                    updateItem(idx, "unit_price", parseFloat(e.target.value) || 0)
-                  }
-                  className="w-full h-10 px-2 rounded-lg border border-gray-200 text-sm text-center focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
+                <input type="number" placeholder="Price" value={item.unit_price} onChange={e => updateItem(idx, "unit_price", parseFloat(e.target.value) || 0)} className="w-full h-10 px-2 rounded-lg border border-gray-200 text-sm text-center focus:outline-none focus:ring-2 focus:ring-indigo-500" />
               </div>
               <div className="col-span-1 text-right">
-                <button
-                  onClick={() => removeItem(idx)}
-                  className="text-red-500 hover:text-red-700 font-bold"
-                >
-                  ×
-                </button>
+                <button onClick={() => removeItem(idx)} className="text-red-500 hover:text-red-700 font-bold">×</button>
               </div>
             </div>
           ))}
@@ -461,68 +388,37 @@ function InvoiceEditForm({
       {/* Tax & Discount */}
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-xs font-semibold text-gray-500 mb-1">
-            Tax (%)
-          </label>
-          <input
-            type="number"
-            value={data.tax_percentage}
-            onChange={e =>
-              updateField("tax_percentage", parseFloat(e.target.value) || 0)
-            }
-            className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
+          <label className="block text-xs font-semibold text-gray-500 mb-1">Tax (%)</label>
+          <input type="number" value={data.tax_percentage === -1 ? 0 : data.tax_percentage} onChange={e => updateField("tax_percentage", parseFloat(e.target.value) || 0)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-gray-500 mb-1">
-            Discount
-          </label>
-          <input
-            type="number"
-            value={data.discount}
-            onChange={e =>
-              updateField("discount", parseFloat(e.target.value) || 0)
-            }
-            className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
+          <label className="block text-xs font-semibold text-gray-500 mb-1">Discount</label>
+          <input type="number" value={data.discount === -1 ? 0 : data.discount} onChange={e => updateField("discount", parseFloat(e.target.value) || 0)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
       </div>
 
       {/* Dates */}
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-xs font-semibold text-gray-500 mb-1">
-            Issue Date
-          </label>
-          <input
-            type="date"
-            value={data.issue_date}
-            onChange={e => updateField("issue_date", e.target.value)}
-            className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
+          <label className="block text-xs font-semibold text-gray-500 mb-1">Issue Date</label>
+          <input type="date" value={data.issue_date} onChange={e => updateField("issue_date", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-gray-500 mb-1">
-            Due Date
-          </label>
-          <input
-            type="date"
-            value={data.due_date}
-            onChange={e => updateField("due_date", e.target.value)}
-            className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
+          <label className="block text-xs font-semibold text-gray-500 mb-1">Due Date</label>
+          <input type="date" value={data.due_date} onChange={e => updateField("due_date", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
+      </div>
+
+      {/* QR Code Data */}
+      <div>
+        <label className="block text-xs font-semibold text-gray-500 mb-1">QR Code Data (text or URL)</label>
+        <input value={data.qr_code_data} onChange={e => updateField("qr_code_data", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Payment link or any text" />
       </div>
 
       {/* Notes */}
       <div>
         <label className="block text-xs font-semibold text-gray-500 mb-1">Notes</label>
-        <textarea
-          value={data.notes}
-          onChange={e => updateField("notes", e.target.value)}
-          rows={2}
-          className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        />
+        <textarea value={data.notes} onChange={e => updateField("notes", e.target.value)} rows={2} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
       </div>
     </div>
   );
