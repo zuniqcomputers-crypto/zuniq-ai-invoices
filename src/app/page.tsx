@@ -90,6 +90,12 @@ export default function Dashboard() {
                 </p>
                 <div className="flex gap-2">
                   <Link
+                    href={`/view/${inv.invoice_id}`}
+                    className="flex-1 text-center py-2 rounded-lg bg-gray-100 text-gray-700 font-medium text-sm hover:bg-gray-200 transition"
+                  >
+                    👁️ View
+                  </Link>
+                  <Link
                     href={`/edit/${inv.invoice_id}`}
                     className="flex-1 text-center py-2 rounded-lg bg-gray-100 text-gray-700 font-medium text-sm hover:bg-gray-200 transition"
                   >
