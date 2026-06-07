@@ -299,7 +299,7 @@ export default function NewInvoice() {
   );
 }
 
-/* ---------- Edit Form Component ---------- */
+/* ---------- Edit Form Component (with logo upload) ---------- */
 function InvoiceEditForm({
   data,
   updateField,
@@ -333,7 +333,8 @@ function InvoiceEditForm({
           <label className="block text-xs font-semibold text-gray-500 mb-1">TRN Number</label>
           <input value={data.trn_number} onChange={e => updateField("trn_number", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
-              <div className="sm:col-span-2">
+        {/* Logo Upload Field (NEW) */}
+        <div className="sm:col-span-2">
           <label className="block text-xs font-semibold text-gray-500 mb-1">Business Logo</label>
           <div className="flex items-center gap-3">
             <input
