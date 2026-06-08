@@ -1,4 +1,4 @@
-restore clean dashboard"use client";
+"use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
@@ -26,7 +26,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-gray-900 text-white px-4 md:px-8 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-2xl">
-        <div className="flex items-center gap-3">
+        <Link href="/" className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-xl overflow-hidden ring-2 ring-indigo-400/50">
             <img src="/logo.png" alt="Logo" className="h-full w-full object-cover" />
           </div>
@@ -34,7 +34,7 @@ export default function Dashboard() {
             <h1 className="text-2xl font-bold tracking-tight">Zuniq Invoices</h1>
             <p className="text-indigo-200 text-xs">AI‑powered invoice manager</p>
           </div>
-        </div>
+        </Link>
         <Link
           href="/new"
           className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-semibold shadow-lg transition"
