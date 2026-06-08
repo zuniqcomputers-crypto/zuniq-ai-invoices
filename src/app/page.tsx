@@ -1,10 +1,8 @@
 "use client";
-import { useSession, signIn, signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
 export default function Dashboard() {
-  const { data: session, status } = useSession();
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -27,7 +25,6 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <header className="bg-gray-900 text-white px-4 md:px-8 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-2xl">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-xl overflow-hidden ring-2 ring-indigo-400/50">
@@ -38,32 +35,12 @@ export default function Dashboard() {
             <p className="text-indigo-200 text-xs">AI‑powered invoice manager</p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          {session ? (
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-indigo-200">{session.user?.name}</span>
-              <button
-                onClick={() => signOut()}
-                className="text-sm bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg transition"
-              >
-                Sign out
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={() => signIn("google", { callbackUrl: "/" })}
-              className="text-sm bg-white hover:bg-gray-100 text-gray-800 px-4 py-2 rounded-lg font-medium transition"
-            >
-              Sign in with Google
-            </button>
-          )}
-          <Link
-            href="/new"
-            className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-semibold shadow-lg transition"
-          >
-            <span className="text-lg">+</span> Create New Invoice
-          </Link>
-        </div>
+        <Link
+          href="/new"
+          className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-semibold shadow-lg transition"
+        >
+          <span className="text-lg">+</span> Create New Invoice
+        </Link>
       </header>
 
       <div className="max-w-7xl mx-auto p-4 md:p-8">
