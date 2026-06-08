@@ -1,9 +1,14 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import InvoicePreview from "@/components/InvoicePreview";
 import { InvoiceData } from "@/utils/ai";
 
 export default function NewInvoice() {
+  const { data: session } = useSession();
+  const router = useRouter();
+
   const [invoiceData, setInvoiceData] = useState<InvoiceData>({
     invoice_id: "",
     business_name: "",
@@ -87,6 +92,11 @@ export default function NewInvoice() {
   };
 
   const handleFinalize = async () => {
+    if (!session) {
+      // User not signed in – redirect to sign-in page, then come back
+      router.push(`/auth/signin?callbackUrl=/new`);
+      return;
+    }
     const res = await fetch("/api/invoice/create", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -120,10 +130,10 @@ export default function NewInvoice() {
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
-      {/* Dark Premium Header */}
+      {/* Premium Header */}
       <header className="px-5 py-3 bg-gray-900 text-white flex items-center justify-between shadow-2xl z-10">
         <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-lg overflow-hidden ring-2 ring-indigo-400/50">
+          <div className="h-9 w-9 rounded-lg overflow-hidden ring-2 ring-indigo-400/50 transition hover:scale-105">
             <img src="/logo.png" alt="Logo" className="h-full w-full object-cover" />
           </div>
           <h1 className="text-lg font-bold tracking-tight">Zuniq Invoices</h1>
@@ -141,10 +151,10 @@ export default function NewInvoice() {
             className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"} animate-fade-in`}
           >
             <div
-              className={`max-w-[80%] px-4 py-3 rounded-2xl text-sm leading-relaxed shadow-sm ${
+              className={`max-w-[80%] px-4 py-3 rounded-2xl text-sm leading-relaxed shadow-sm transition-all duration-300 ${
                 msg.sender === "user"
-                  ? "bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-br-md"
-                  : "bg-white text-gray-800 rounded-bl-md border border-gray-100 shadow-sm"
+                  ? "bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-br-md hover:shadow-md"
+                  : "bg-white text-gray-800 rounded-bl-md border border-gray-100 hover:shadow-md"
               }`}
             >
               {msg.text}
@@ -165,14 +175,14 @@ export default function NewInvoice() {
         />
         <button
           onClick={handleSend}
-          className="h-12 w-12 rounded-xl bg-gray-900 text-white flex items-center justify-center shadow-lg hover:bg-gray-800 active:scale-95 transition"
+          className="h-12 w-12 rounded-xl bg-gray-900 text-white flex items-center justify-center shadow-lg hover:bg-gray-800 active:scale-95 transition-all duration-200"
         >
           ➤
         </button>
         {isComplete && (
           <button
             onClick={handleFinalize}
-            className="h-12 px-5 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 text-white font-semibold shadow-lg active:scale-95 transition text-sm"
+            className="h-12 px-5 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 text-white font-semibold shadow-lg hover:from-emerald-600 hover:to-green-700 active:scale-95 transition-all duration-200 text-sm"
           >
             Finalize ✨
           </button>
@@ -183,7 +193,7 @@ export default function NewInvoice() {
       {!showPreview && (
         <button
           onClick={() => setShowPreview(true)}
-          className="md:hidden fixed bottom-24 right-5 h-14 w-14 rounded-full bg-gray-900 text-white shadow-2xl flex items-center justify-center animate-bounce-gentle z-40"
+          className="md:hidden fixed bottom-24 right-5 h-14 w-14 rounded-full bg-gray-900 text-white shadow-2xl flex items-center justify-center animate-bounce-gentle z-40 hover:scale-105 transition"
         >
           <span className="text-xl">📄</span>
         </button>
@@ -200,7 +210,7 @@ export default function NewInvoice() {
               {!editMode && (
                 <button
                   onClick={() => setEditMode(true)}
-                  className="text-xs px-3 py-1 rounded-full bg-indigo-100 text-indigo-700 font-medium"
+                  className="text-xs px-3 py-1 rounded-full bg-indigo-100 text-indigo-700 font-medium hover:bg-indigo-200 transition"
                 >
                   ✏️ Edit
                 </button>
@@ -208,14 +218,14 @@ export default function NewInvoice() {
               {editMode && (
                 <button
                   onClick={() => setEditMode(false)}
-                  className="text-xs px-3 py-1 rounded-full bg-gray-200 text-gray-700 font-medium"
+                  className="text-xs px-3 py-1 rounded-full bg-gray-200 text-gray-700 font-medium hover:bg-gray-300 transition"
                 >
                   👁 Preview
                 </button>
               )}
               <button
                 onClick={() => setShowPreview(false)}
-                className="text-gray-400 hover:text-gray-600 text-2xl"
+                className="text-gray-400 hover:text-gray-600 text-2xl transition"
               >
                 ×
               </button>
@@ -236,7 +246,7 @@ export default function NewInvoice() {
                 {isComplete && (
                   <button
                     onClick={handleFinalize}
-                    className="mt-4 w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 text-white font-semibold shadow-lg"
+                    className="mt-4 w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 text-white font-semibold shadow-lg hover:from-emerald-600 hover:to-green-700 active:scale-95 transition-all duration-200"
                   >
                     Save & Finalize Invoice
                   </button>
@@ -257,7 +267,7 @@ export default function NewInvoice() {
             {!editMode && (
               <button
                 onClick={() => setEditMode(true)}
-                className="text-sm px-4 py-2 rounded-lg bg-indigo-100 text-indigo-700 font-medium hover:bg-indigo-200 transition"
+                className="text-sm px-4 py-2 rounded-lg bg-indigo-100 text-indigo-700 font-medium hover:bg-indigo-200 transition-all duration-200"
               >
                 ✏️ Edit
               </button>
@@ -265,7 +275,7 @@ export default function NewInvoice() {
             {editMode && (
               <button
                 onClick={() => setEditMode(false)}
-                className="text-sm px-4 py-2 rounded-lg bg-gray-200 text-gray-700 font-medium hover:bg-gray-300 transition"
+                className="text-sm px-4 py-2 rounded-lg bg-gray-200 text-gray-700 font-medium hover:bg-gray-300 transition-all duration-200"
               >
                 👁 Preview
               </button>
@@ -287,7 +297,7 @@ export default function NewInvoice() {
             {isComplete && (
               <button
                 onClick={handleFinalize}
-                className="mt-6 w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 text-white font-semibold shadow-lg"
+                className="mt-6 w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 text-white font-semibold shadow-lg hover:from-emerald-600 hover:to-green-700 active:scale-95 transition-all duration-200"
               >
                 Save & Finalize Invoice
               </button>
@@ -319,21 +329,21 @@ function InvoiceEditForm({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-xs font-semibold text-gray-500 mb-1">Business Name</label>
-          <input value={data.business_name} onChange={e => updateField("business_name", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <input value={data.business_name} onChange={e => updateField("business_name", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200" />
         </div>
         <div>
           <label className="block text-xs font-semibold text-gray-500 mb-1">Business Email</label>
-          <input value={data.business_email} onChange={e => updateField("business_email", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <input value={data.business_email} onChange={e => updateField("business_email", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200" />
         </div>
         <div>
           <label className="block text-xs font-semibold text-gray-500 mb-1">Business Phone</label>
-          <input value={data.business_phone} onChange={e => updateField("business_phone", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <input value={data.business_phone} onChange={e => updateField("business_phone", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200" />
         </div>
         <div>
           <label className="block text-xs font-semibold text-gray-500 mb-1">TRN Number</label>
-          <input value={data.trn_number} onChange={e => updateField("trn_number", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <input value={data.trn_number} onChange={e => updateField("trn_number", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200" />
         </div>
-        {/* Logo Upload Field (NEW) */}
+        {/* Logo Upload Field */}
         <div className="sm:col-span-2">
           <label className="block text-xs font-semibold text-gray-500 mb-1">Business Logo</label>
           <div className="flex items-center gap-3">
@@ -341,9 +351,9 @@ function InvoiceEditForm({
               value={data.business_logo_url}
               onChange={e => updateField("business_logo_url", e.target.value)}
               placeholder="Paste image URL or upload"
-              className="flex-1 h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="flex-1 h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200"
             />
-            <label className="h-10 px-4 rounded-lg bg-indigo-100 text-indigo-700 font-medium text-sm flex items-center cursor-pointer hover:bg-indigo-200 transition">
+            <label className="h-10 px-4 rounded-lg bg-indigo-100 text-indigo-700 font-medium text-sm flex items-center cursor-pointer hover:bg-indigo-200 transition-all duration-200">
               📁 Upload
               <input
                 type="file"
@@ -380,19 +390,19 @@ function InvoiceEditForm({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="block text-xs font-semibold text-gray-500 mb-1">Client Name</label>
-          <input value={data.client_name} onChange={e => updateField("client_name", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <input value={data.client_name} onChange={e => updateField("client_name", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200" />
         </div>
         <div>
           <label className="block text-xs font-semibold text-gray-500 mb-1">Client Email</label>
-          <input value={data.client_email} onChange={e => updateField("client_email", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <input value={data.client_email} onChange={e => updateField("client_email", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200" />
         </div>
         <div>
           <label className="block text-xs font-semibold text-gray-500 mb-1">Client Phone</label>
-          <input value={data.client_phone} onChange={e => updateField("client_phone", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <input value={data.client_phone} onChange={e => updateField("client_phone", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200" />
         </div>
         <div className="sm:col-span-2">
           <label className="block text-xs font-semibold text-gray-500 mb-1">Client Address</label>
-          <input value={data.client_address} onChange={e => updateField("client_address", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <input value={data.client_address} onChange={e => updateField("client_address", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200" />
         </div>
       </div>
 
@@ -400,22 +410,22 @@ function InvoiceEditForm({
       <div>
         <div className="flex justify-between items-center mb-2">
           <label className="text-xs font-semibold text-gray-500">Items</label>
-          <button onClick={addItem} className="text-xs px-3 py-1 rounded-lg bg-indigo-100 text-indigo-700 font-medium hover:bg-indigo-200 transition">+ Add Item</button>
+          <button onClick={addItem} className="text-xs px-3 py-1 rounded-lg bg-indigo-100 text-indigo-700 font-medium hover:bg-indigo-200 transition-all duration-200">+ Add Item</button>
         </div>
         <div className="space-y-3">
           {data.items.map((item, idx) => (
             <div key={idx} className="grid grid-cols-12 gap-2 items-center">
               <div className="col-span-5">
-                <input placeholder="Description" value={item.description} onChange={e => updateItem(idx, "description", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                <input placeholder="Description" value={item.description} onChange={e => updateItem(idx, "description", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200" />
               </div>
               <div className="col-span-2">
-                <input type="number" placeholder="Qty" value={item.quantity} onChange={e => updateItem(idx, "quantity", parseFloat(e.target.value) || 0)} className="w-full h-10 px-2 rounded-lg border border-gray-200 text-sm text-center focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                <input type="number" placeholder="Qty" value={item.quantity} onChange={e => updateItem(idx, "quantity", parseFloat(e.target.value) || 0)} className="w-full h-10 px-2 rounded-lg border border-gray-200 text-sm text-center focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200" />
               </div>
               <div className="col-span-3">
-                <input type="number" placeholder="Price" value={item.unit_price} onChange={e => updateItem(idx, "unit_price", parseFloat(e.target.value) || 0)} className="w-full h-10 px-2 rounded-lg border border-gray-200 text-sm text-center focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                <input type="number" placeholder="Price" value={item.unit_price} onChange={e => updateItem(idx, "unit_price", parseFloat(e.target.value) || 0)} className="w-full h-10 px-2 rounded-lg border border-gray-200 text-sm text-center focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200" />
               </div>
               <div className="col-span-1 text-right">
-                <button onClick={() => removeItem(idx)} className="text-red-500 hover:text-red-700 font-bold">×</button>
+                <button onClick={() => removeItem(idx)} className="text-red-500 hover:text-red-700 font-bold transition-colors duration-200">×</button>
               </div>
             </div>
           ))}
@@ -426,11 +436,11 @@ function InvoiceEditForm({
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-xs font-semibold text-gray-500 mb-1">Tax (%)</label>
-          <input type="number" value={data.tax_percentage === -1 ? 0 : data.tax_percentage} onChange={e => updateField("tax_percentage", parseFloat(e.target.value) || 0)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <input type="number" value={data.tax_percentage === -1 ? 0 : data.tax_percentage} onChange={e => updateField("tax_percentage", parseFloat(e.target.value) || 0)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200" />
         </div>
         <div>
           <label className="block text-xs font-semibold text-gray-500 mb-1">Discount</label>
-          <input type="number" value={data.discount === -1 ? 0 : data.discount} onChange={e => updateField("discount", parseFloat(e.target.value) || 0)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <input type="number" value={data.discount === -1 ? 0 : data.discount} onChange={e => updateField("discount", parseFloat(e.target.value) || 0)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200" />
         </div>
       </div>
 
@@ -438,24 +448,24 @@ function InvoiceEditForm({
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-xs font-semibold text-gray-500 mb-1">Issue Date</label>
-          <input type="date" value={data.issue_date} onChange={e => updateField("issue_date", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <input type="date" value={data.issue_date} onChange={e => updateField("issue_date", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200" />
         </div>
         <div>
           <label className="block text-xs font-semibold text-gray-500 mb-1">Due Date</label>
-          <input type="date" value={data.due_date} onChange={e => updateField("due_date", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <input type="date" value={data.due_date} onChange={e => updateField("due_date", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200" />
         </div>
       </div>
 
       {/* QR Code Data */}
       <div>
         <label className="block text-xs font-semibold text-gray-500 mb-1">QR Code Data (text or URL)</label>
-        <input value={data.qr_code_data} onChange={e => updateField("qr_code_data", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Payment link or any text" />
+        <input value={data.qr_code_data} onChange={e => updateField("qr_code_data", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200" placeholder="Payment link or any text" />
       </div>
 
       {/* Notes */}
       <div>
         <label className="block text-xs font-semibold text-gray-500 mb-1">Notes</label>
-        <textarea value={data.notes} onChange={e => updateField("notes", e.target.value)} rows={2} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        <textarea value={data.notes} onChange={e => updateField("notes", e.target.value)} rows={2} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200" />
       </div>
     </div>
   );
