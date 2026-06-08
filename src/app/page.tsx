@@ -1,29 +1,10 @@
 "use client";
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useSession, signIn, signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
 export default function Dashboard() {
   const { data: session, status } = useSession();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/auth/signin");
-    }
-  }, [status, router]);
-
-  // Don't show dashboard until session is confirmed
-  if (status === "loading" || !session) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-gray-500">
-        Loading…
-      </div>
-    );
-  }
-
-  // --- Original dashboard code (unchanged) ---
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -57,12 +38,32 @@ export default function Dashboard() {
             <p className="text-indigo-200 text-xs">AI‑powered invoice manager</p>
           </div>
         </div>
-        <Link
-          href="/new"
-          className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-semibold shadow-lg transition"
-        >
-          <span className="text-lg">+</span> Create New Invoice
-        </Link>
+        <div className="flex items-center gap-3">
+          {session ? (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-indigo-200">{session.user?.name}</span>
+              <button
+                onClick={() => signOut()}
+                className="text-sm bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg transition"
+              >
+                Sign out
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => signIn("google", { callbackUrl: "/" })}
+              className="text-sm bg-white hover:bg-gray-100 text-gray-800 px-4 py-2 rounded-lg font-medium transition"
+            >
+              Sign in with Google
+            </button>
+          )}
+          <Link
+            href="/new"
+            className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-semibold shadow-lg transition"
+          >
+            <span className="text-lg">+</span> Create New Invoice
+          </Link>
+        </div>
       </header>
 
       <div className="max-w-7xl mx-auto p-4 md:p-8">
