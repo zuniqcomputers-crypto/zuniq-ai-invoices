@@ -1,14 +1,9 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
 import InvoicePreview from "@/components/InvoicePreview";
 import { InvoiceData } from "@/utils/ai";
 
 export default function NewInvoice() {
-  const { data: session } = useSession();
-  const router = useRouter();
-
   const [invoiceData, setInvoiceData] = useState<InvoiceData>({
     invoice_id: "",
     business_name: "",
@@ -92,11 +87,6 @@ export default function NewInvoice() {
   };
 
   const handleFinalize = async () => {
-    if (!session) {
-      // User not signed in – redirect to sign-in page, then come back
-      router.push(`/auth/signin?callbackUrl=/new`);
-      return;
-    }
     const res = await fetch("/api/invoice/create", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
