@@ -1,8 +1,29 @@
 "use client";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
 export default function Dashboard() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/auth/signin");
+    }
+  }, [status, router]);
+
+  // Don't show dashboard until session is confirmed
+  if (status === "loading" || !session) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-gray-500">
+        Loading…
+      </div>
+    );
+  }
+
+  // --- Original dashboard code (unchanged) ---
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
 
