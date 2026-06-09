@@ -11,6 +11,7 @@ export default function NewInvoice() {
     business_phone: "",
     trn_number: "",
     business_logo_url: "",
+    signature_url: "",
     qr_code_data: "",
     client_name: "",
     client_email: "",
@@ -299,7 +300,7 @@ export default function NewInvoice() {
   );
 }
 
-/* ---------- Edit Form Component (with logo upload) ---------- */
+/* ---------- Edit Form Component (with logo upload + signature upload) ---------- */
 function InvoiceEditForm({
   data,
   updateField,
@@ -367,6 +368,47 @@ function InvoiceEditForm({
               <img src={data.business_logo_url} alt="Logo preview" className="h-8 w-8 object-contain rounded border" />
               <button
                 onClick={() => updateField("business_logo_url", "")}
+                className="text-xs text-red-500 hover:underline"
+              >
+                Remove
+              </button>
+            </div>
+          )}
+        </div>
+        {/* Signature Upload Field */}
+        <div className="sm:col-span-2">
+          <label className="block text-xs font-semibold text-gray-500 mb-1">Digital Signature</label>
+          <div className="flex items-center gap-3">
+            <input
+              value={data.signature_url}
+              onChange={e => updateField("signature_url", e.target.value)}
+              placeholder="Paste image URL or upload"
+              className="flex-1 h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200"
+            />
+            <label className="h-10 px-4 rounded-lg bg-indigo-100 text-indigo-700 font-medium text-sm flex items-center cursor-pointer hover:bg-indigo-200 transition-all duration-200">
+              📁 Upload
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                      updateField("signature_url", ev.target?.result as string);
+                    };
+                    reader.readAsDataURL(file);
+                  }
+                }}
+              />
+            </label>
+          </div>
+          {data.signature_url && (
+            <div className="mt-2 flex items-center gap-2">
+              <img src={data.signature_url} alt="Signature preview" className="h-8 w-20 object-contain rounded border" />
+              <button
+                onClick={() => updateField("signature_url", "")}
                 className="text-xs text-red-500 hover:underline"
               >
                 Remove
