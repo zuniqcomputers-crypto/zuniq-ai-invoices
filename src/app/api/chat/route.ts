@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { processChat, InvoiceData } from "@/utils/ai";
 
-// Force dynamic to avoid static prerendering issues
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
@@ -17,14 +16,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Message required" }, { status: 400 });
     }
 
-    const result = processChat(message, currentData, conversationHistory);
+    const result = await processChat(message, currentData, conversationHistory);
     return NextResponse.json(result);
   } catch (e: any) {
     return NextResponse.json({ error: e.message || "Server error" }, { status: 500 });
   }
-}
-
-// If any other method is used, return 405
-export async function GET() {
-  return NextResponse.json({ error: "Method not allowed" }, { status: 405 });
 }
