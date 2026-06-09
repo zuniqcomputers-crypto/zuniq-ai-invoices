@@ -33,11 +33,9 @@ function calculateTotals(data: InvoiceData) {
   return { subtotal, total };
 }
 
-// The Gemini API endpoint (using the fast, free model)
 const GEMINI_API_URL =
   "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
 
-// The system prompt that tells Gemini exactly what to do
 const SYSTEM_PROMPT = `You are a friendly, professional AI invoice assistant for "Zuniq Invoices".
 Your job is to collect information from the user step by step to build a complete invoice.
 You are given the current invoice data in JSON format and the conversation history.
@@ -78,9 +76,6 @@ Important fields and their order:
 
 Always keep the conversation natural and helpful. If the user asks for help or says "I don't know", give them a hint.`;
 
-/**
- * Sends the conversation to Gemini and returns the parsed result.
- */
 async function callGemini(
   currentData: InvoiceData,
   userMessage: string,
@@ -89,7 +84,6 @@ async function callGemini(
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error("GEMINI_API_KEY is not set");
 
-  // Build a clean conversation context for Gemini
   const previousMessages = history
     .map((msg, idx) => `[${idx % 2 === 0 ? "AI" : "User"}]: ${msg}`)
     .join("\n");
@@ -132,13 +126,11 @@ Remember: output ONLY the JSON object with "reply" and "updatedData".`;
   const content = json.candidates?.[0]?.content?.parts?.[0]?.text;
   if (!content) throw new Error("No content in Gemini response");
 
-  // Extract the JSON from the response (may be wrapped in markdown)
   const jsonMatch = content.match(/\{[\s\S]*\}/);
   if (!jsonMatch) throw new Error("Failed to parse JSON from Gemini response");
 
   const parsed = JSON.parse(jsonMatch[0]);
 
-  // Ensure totals are recalculated correctly
   const updatedData: InvoiceData = {
     ...currentData,
     ...parsed.updatedData,
@@ -154,7 +146,6 @@ Remember: output ONLY the JSON object with "reply" and "updatedData".`;
   };
 }
 
-// The main function that your app calls
 export async function processChat(
   msg: string,
   currentData: InvoiceData,
@@ -164,7 +155,6 @@ export async function processChat(
     return await callGemini(currentData, msg, history);
   } catch (error: any) {
     console.error("Gemini error:", error);
-    // Fallback: return the unchanged data with an error message
     return {
       reply: "I'm sorry, I had a little trouble understanding that. Could you try again?",
       updatedData: currentData,
