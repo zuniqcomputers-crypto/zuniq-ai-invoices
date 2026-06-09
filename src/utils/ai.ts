@@ -26,18 +26,16 @@ export interface InvoiceData {
   notes: string;
 }
 
-// Helper to recalculate totals
 function calculateTotals(data: InvoiceData) {
   const subtotal = data.items.reduce((sum, i) => sum + i.quantity * i.unit_price, 0);
   const total = subtotal + (subtotal * Math.max(0, data.tax_percentage)) / 100 - (data.discount || 0);
   return { subtotal, total };
 }
 
-// The correct Gemini API endpoint (free tier)
+// Correct model for free tier
 const GEMINI_API_URL =
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-001:generateContent";
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent";
 
-// The system prompt that tells Gemini exactly what to do
 const SYSTEM_PROMPT = `You are a friendly, professional AI invoice assistant for "Zuniq Invoices".
 Your job is to collect information from the user step by step to build a complete invoice.
 You are given the current invoice data in JSON format and the conversation history.
