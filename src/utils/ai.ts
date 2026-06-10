@@ -1,7 +1,3 @@
-// ============================================================
-//  AI powered by Google Gemini (free tier)
-// ============================================================
-
 export interface InvoiceData {
   invoice_id: string;
   business_name: string;
@@ -32,7 +28,6 @@ function calculateTotals(data: InvoiceData) {
   return { subtotal, total };
 }
 
-// Correct model for free tier
 const GEMINI_API_URL =
   "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent";
 
@@ -42,25 +37,22 @@ You are given the current invoice data in JSON format and the conversation histo
 Your task is to:
 - Check which fields are still missing or empty.
 - Ask ONE question at a time to fill the next missing field.
-- If the user corrects a previous answer (e.g., "no, my business name is XYZ"), you must update that field and thank them.
+- If the user corrects a previous answer, update that field and thank them.
 - Never repeat a question that has already been answered.
 - If all fields are filled, respond that the invoice is complete and the user can review it.
-- When the user gives an answer, you must update the invoice data accordingly.
 
-You must output your response in the following JSON format ONLY, with no extra text:
+You must output your response in the following JSON format ONLY:
 {
   "reply": "your message to the user",
   "updatedData": { ... the updated invoice object with all fields }
 }
-
-If the user sends a greeting or thanks, respond naturally but still keep the JSON format.
 
 Important fields and their order:
 1. business_name
 2. business_email
 3. business_phone
 4. trn_number
-5. business_logo_url (optional, can be skipped)
+5. business_logo_url (optional)
 6. client_name
 7. client_email
 8. client_phone
@@ -72,9 +64,7 @@ Important fields and their order:
 14. due_date
 15. qr_code_data (optional)
 16. notes (optional)
-17. signature_url (optional)
-
-Always keep the conversation natural and helpful. If the user asks for help or says "I don't know", give them a hint.`;
+17. signature_url (optional)`;
 
 async function callGemini(
   currentData: InvoiceData,
