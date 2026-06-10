@@ -34,7 +34,7 @@ function calculateTotals(data: InvoiceData) {
 
 // Correct model for free tier
 const GEMINI_API_URL =
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent";
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent";
 
 const SYSTEM_PROMPT = `You are a friendly, professional AI invoice assistant for "Zuniq Invoices".
 Your job is to collect information from the user step by step to build a complete invoice.
