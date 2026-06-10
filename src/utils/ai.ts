@@ -22,12 +22,13 @@ export interface InvoiceData {
   notes: string;
 }
 
+// ============ RULE-BASED AI (ORIGINAL) ============
 const fieldOrder: { key: keyof InvoiceData; question: string; hint: string }[] = [
   { key: "business_name", question: "What is your business name?", hint: "e.g. Pharmacos Skincare Trading FZC" },
   { key: "business_email", question: "What's your business email?", hint: "e.g. official@example.com" },
   { key: "business_phone", question: "What's your business phone number?", hint: "e.g. 00971507024817" },
   { key: "trn_number", question: "What is your TRN (Tax Registration Number)?", hint: "e.g. 104790700900001" },
-  { key: "business_logo_url", question: "Do you have a logo? You can upload one later in the editor, or type 'skip'.", hint: "You can paste a URL or upload a file from the edit form." },
+  { key: "business_logo_url", question: "Do you have a logo? You can upload one later, or type 'skip'.", hint: "You can paste a URL or upload a file from the edit form." },
   { key: "client_name", question: "Who is the client?", hint: "Client's full name." },
   { key: "client_email", question: "What is the client's email?", hint: "Client email address." },
   { key: "client_phone", question: "What is the client's phone number?", hint: "e.g. 056 950 5008" },
@@ -60,7 +61,6 @@ function getNextMissing(data: InvoiceData): number {
 function applyAnswer(data: InvoiceData, fieldIndex: number, answer: string) {
   const key = fieldOrder[fieldIndex].key;
   const trimmed = answer.trim();
-
   if (key === "items") {
     const parts = trimmed.match(/^(.+?)\s+(\d+(?:\.\d+)?)\s*$/);
     if (parts) {
@@ -78,69 +78,90 @@ function applyAnswer(data: InvoiceData, fieldIndex: number, answer: string) {
   }
 }
 
-export function processChat(
-  msg: string,
-  currentData: InvoiceData,
-  history: string[]
-): { reply: string; updatedData: InvoiceData } {
+function ruleBasedChat(msg: string, currentData: InvoiceData): { reply: string; updatedData: InvoiceData } {
   const data = { ...currentData, items: currentData.items.map((i) => ({ ...i })) };
   const t = msg.trim();
   const lower = t.toLowerCase();
 
-  // Greetings
-  if (["hello", "hi", "hey", "good morning", "good afternoon", "good evening", "yo"].some(g => lower.includes(g))) {
+  if (["hello", "hi", "hey", "good morning"].some(g => lower.includes(g))) {
     const nextIdx = getNextMissing(data);
     return {
-      reply: nextIdx === -1
-        ? "Hello! All invoice details are filled. You can review and finalize."
-        : `Hello! ${fieldOrder[nextIdx].question}`,
+      reply: nextIdx === -1 ? "Hello! All details filled." : `Hello! ${fieldOrder[nextIdx].question}`,
       updatedData: data,
     };
   }
-
-  // Thanks
-  if (["thanks", "thank you", "thx", "appreciate"].some(g => lower.includes(g))) {
+  if (["thanks", "thank you", "thx"].some(g => lower.includes(g))) {
     return { reply: "You're welcome! 😊", updatedData: data };
   }
-
-  // Help
-  if (["help", "not sure", "what do you mean", "idk", "i don't know", "confused"].some(phrase => lower.includes(phrase))) {
+  if (["help", "not sure", "idk"].some(g => lower.includes(g))) {
     const nextIdx = getNextMissing(data);
-    if (nextIdx === -1) return { reply: "All set! You can finalize the invoice.", updatedData: data };
+    if (nextIdx === -1) return { reply: "All set!", updatedData: data };
     return { reply: `No problem! ${fieldOrder[nextIdx].hint}`, updatedData: data };
   }
 
-  // Find first missing field
   const missingIdx = getNextMissing(data);
-
   if (missingIdx === -1) {
     const subtotal = data.items.reduce((sum, i) => sum + i.quantity * i.unit_price, 0);
     const total = subtotal + (subtotal * data.tax_percentage / 100) - data.discount;
     data.subtotal = subtotal;
     data.total = total;
-    return {
-      reply: "All information collected! You can review your invoice on the right. Want to make changes or finalize?",
-      updatedData: data,
-    };
+    return { reply: "All information collected! You can review and finalize.", updatedData: data };
   }
 
   applyAnswer(data, missingIdx, t);
-
   const subtotal = data.items.reduce((sum, i) => sum + i.quantity * i.unit_price, 0);
   const total = subtotal + (subtotal * data.tax_percentage / 100) - data.discount;
   data.subtotal = subtotal;
   data.total = total;
 
   const nextIdx = getNextMissing(data);
-  if (nextIdx === -1) {
-    return {
-      reply: "All information collected! You can review your invoice on the right. Want to make changes or finalize?",
-      updatedData: data,
-    };
-  }
+  if (nextIdx === -1) return { reply: "All information collected! You can review and finalize.", updatedData: data };
+  return { reply: fieldOrder[nextIdx].question, updatedData: data };
+}
 
-  return {
-    reply: fieldOrder[nextIdx].question,
-    updatedData: data,
-  };
+// ============ GEMINI AI (FALLBACK) ============
+const GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent";
+
+async function geminiChat(msg: string, currentData: InvoiceData, history: string[]): Promise<{ reply: string; updatedData: InvoiceData }> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error("GEMINI_API_KEY not set");
+
+  const prev = history.map((m, i) => `[${i % 2 === 0 ? "AI" : "User"}]: ${m}`).join("\n");
+  const prompt = `You are an invoice assistant. Current data: ${JSON.stringify(currentData)}. Conversation: ${prev}. User: ${msg}. Output ONLY: {"reply":"...", "updatedData": {...}}`;
+
+  const res = await fetch(`${GEMINI_URL}?key=${apiKey}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.3, maxOutputTokens: 1500 },
+    }),
+  });
+
+  if (!res.ok) throw new Error("Gemini API failed");
+  const json = await res.json();
+  const text = json.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!text) throw new Error("No response");
+  const match = text.match(/\{[\s\S]*\}/);
+  if (!match) throw new Error("Invalid JSON");
+  const parsed = JSON.parse(match[0]);
+  const updated = { ...currentData, ...parsed.updatedData };
+  return { reply: parsed.reply, updatedData: updated };
+}
+
+// ============ MAIN EXPORT ============
+export async function processChat(
+  msg: string,
+  currentData: InvoiceData,
+  history: string[],
+  useGemini: boolean = false
+): Promise<{ reply: string; updatedData: InvoiceData }> {
+  if (useGemini) {
+    try {
+      return await geminiChat(msg, currentData, history);
+    } catch (e) {
+      console.error("Gemini failed, falling back to rule-based AI", e);
+    }
+  }
+  return ruleBasedChat(msg, currentData);
 }
