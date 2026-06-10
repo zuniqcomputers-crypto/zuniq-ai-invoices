@@ -4,6 +4,9 @@ import InvoicePreview from "@/components/InvoicePreview";
 import { InvoiceData } from "@/utils/ai";
 
 export default function NewInvoice() {
+  // Smart AI toggle state
+  const [useSmartAI, setUseSmartAI] = useState(false);
+
   const [invoiceData, setInvoiceData] = useState<InvoiceData>({
     invoice_id: "",
     business_name: "",
@@ -69,7 +72,8 @@ export default function NewInvoice() {
         body: JSON.stringify({
           message: text,
           currentData: invoiceData,
-          conversationHistory: []
+          conversationHistory: [],
+          useGemini: useSmartAI        // <-- sends toggle state to API
         })
       });
       const data = await res.json();
@@ -121,7 +125,7 @@ export default function NewInvoice() {
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
-      {/* Premium Header */}
+      {/* Premium Header with Smart AI Toggle */}
       <header className="px-5 py-3 bg-gray-900 text-white flex items-center justify-between shadow-2xl z-10">
         <div className="flex items-center gap-3">
           <div className="h-9 w-9 rounded-lg overflow-hidden ring-2 ring-indigo-400/50 transition hover:scale-105">
@@ -129,8 +133,21 @@ export default function NewInvoice() {
           </div>
           <h1 className="text-lg font-bold tracking-tight">Zuniq Invoices</h1>
         </div>
-        <div className="text-xs px-3 py-1 bg-indigo-600/30 rounded-full text-indigo-200 font-medium">
-          AI Assistant
+        <div className="flex items-center gap-2">
+          {/* Smart AI Toggle Button */}
+          <button
+            onClick={() => setUseSmartAI(!useSmartAI)}
+            className={`text-xs px-3 py-1 rounded-full font-medium transition ${
+              useSmartAI
+                ? "bg-emerald-500/30 text-emerald-200"
+                : "bg-gray-600/30 text-gray-300"
+            }`}
+          >
+            {useSmartAI ? "✨ Smart AI On" : "✨ Smart AI"}
+          </button>
+          <div className="text-xs px-3 py-1 bg-indigo-600/30 rounded-full text-indigo-200 font-medium">
+            AI Assistant
+          </div>
         </div>
       </header>
 
