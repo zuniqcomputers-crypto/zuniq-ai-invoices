@@ -4,7 +4,6 @@ import InvoicePreview from "@/components/InvoicePreview";
 import { InvoiceData } from "@/utils/ai";
 
 export default function NewInvoice() {
-  // Smart AI toggle state
   const [useSmartAI, setUseSmartAI] = useState(false);
 
   const [invoiceData, setInvoiceData] = useState<InvoiceData>({
@@ -73,15 +72,12 @@ export default function NewInvoice() {
           message: text,
           currentData: invoiceData,
           conversationHistory: [],
-          useGemini: useSmartAI        // <-- sends toggle state to API
+          useGemini: useSmartAI
         })
       });
       const data = await res.json();
       if (data.error) {
-        setMessages([
-          ...newMessages,
-          { sender: "ai", text: "Sorry, something went wrong." }
-        ]);
+        setMessages([...newMessages, { sender: "ai", text: "Sorry, something went wrong." }]);
       } else {
         setInvoiceData(data.updatedData);
         setMessages([...newMessages, { sender: "ai", text: data.reply }]);
@@ -125,33 +121,45 @@ export default function NewInvoice() {
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
-      {/* Premium Header with Smart AI Toggle */}
-      <header className="px-5 py-3 bg-gray-900 text-white flex items-center justify-between shadow-2xl z-10">
-        <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-lg overflow-hidden ring-2 ring-indigo-400/50 transition hover:scale-105">
-            <img src="/logo.png" alt="Logo" className="h-full w-full object-cover" />
+      {/* ───── Luxurious Header with iOS‑style Smart AI Toggle ───── */}
+      <header className="relative px-5 py-3 bg-gradient-to-r from-gray-900 via-slate-800 to-gray-900 border-b border-gray-800 shadow-2xl z-10">
+        <div className="flex items-center justify-between">
+          {/* Logo & App Name */}
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-9 rounded-xl overflow-hidden ring-2 ring-indigo-400/50 shadow-md transition hover:scale-105">
+              <img src="/logo.png" alt="Logo" className="h-full w-full object-cover" />
+            </div>
+            <h1 className="text-lg font-bold tracking-tight text-white">Zuniq Invoices</h1>
           </div>
-          <h1 className="text-lg font-bold tracking-tight">Zuniq Invoices</h1>
-        </div>
-        <div className="flex items-center gap-2">
-          {/* Smart AI Toggle Button */}
-          <button
-            onClick={() => setUseSmartAI(!useSmartAI)}
-            className={`text-xs px-3 py-1 rounded-full font-medium transition ${
-              useSmartAI
-                ? "bg-emerald-500/30 text-emerald-200"
-                : "bg-gray-600/30 text-gray-300"
-            }`}
-          >
-            {useSmartAI ? "✨ Smart AI On" : "✨ Smart AI"}
-          </button>
-          <div className="text-xs px-3 py-1 bg-indigo-600/30 rounded-full text-indigo-200 font-medium">
-            AI Assistant
+
+          {/* Smart AI Toggle + Badge */}
+          <div className="flex items-center gap-3">
+            {/* iOS Toggle */}
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                className="sr-only peer"
+                checked={useSmartAI}
+                onChange={() => setUseSmartAI(!useSmartAI)}
+              />
+              <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-500 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-emerald-500 peer-checked:to-green-500 peer-checked:shadow-[0_0_12px_rgba(16,185,129,0.4)]"></div>
+            </label>
+            <span className="text-sm font-medium text-gray-300">
+              {useSmartAI ? "✨ Smart AI" : "Smart AI"}
+            </span>
+
+            {/* Divider */}
+            <div className="h-6 w-px bg-gray-600 mx-1" />
+
+            {/* AI Assistant badge */}
+            <div className="text-xs px-3 py-1 bg-indigo-600/30 rounded-full text-indigo-200 font-medium">
+              AI Assistant
+            </div>
           </div>
         </div>
       </header>
 
-      {/* Chat Area */}
+      {/* ───── Chat Area (unchanged) ───── */}
       <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4 bg-gradient-to-b from-gray-50 to-white">
         {messages.map((msg, i) => (
           <div
@@ -172,7 +180,7 @@ export default function NewInvoice() {
         <div ref={chatEndRef} />
       </div>
 
-      {/* Glassmorphism Input Bar */}
+      {/* ───── Glassmorphism Input Bar (unchanged) ───── */}
       <div className="px-4 py-3 bg-white/80 backdrop-blur-lg border-t border-gray-200 flex items-center gap-2">
         <input
           value={input}
@@ -197,7 +205,7 @@ export default function NewInvoice() {
         )}
       </div>
 
-      {/* Floating Preview Button (Mobile) */}
+      {/* ───── Mobile Preview Button & Sheet (unchanged) ───── */}
       {!showPreview && (
         <button
           onClick={() => setShowPreview(true)}
@@ -207,7 +215,6 @@ export default function NewInvoice() {
         </button>
       )}
 
-      {/* Mobile Preview Sheet */}
       {showPreview && (
         <div className="md:hidden fixed inset-x-0 bottom-0 z-50 bg-white rounded-t-3xl shadow-2xl max-h-[85vh] overflow-y-auto animate-slide-up">
           <div className="sticky top-0 bg-white pt-4 pb-2 px-6 flex justify-between items-center border-b border-gray-100">
@@ -265,7 +272,7 @@ export default function NewInvoice() {
         </div>
       )}
 
-      {/* Desktop Preview (always visible) */}
+      {/* ───── Desktop Preview (unchanged) ───── */}
       <div className="hidden md:block fixed right-0 top-0 h-full w-1/2 bg-white border-l border-gray-200 p-6 overflow-y-auto shadow-2xl">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-gray-900">
