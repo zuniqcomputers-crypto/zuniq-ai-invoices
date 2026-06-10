@@ -4,7 +4,11 @@ import InvoicePreview from "@/components/InvoicePreview";
 import { InvoiceData } from "@/utils/ai";
 
 export default function NewInvoice() {
+  /* ──────────── States ──────────── */
   const [useSmartAI, setUseSmartAI] = useState(false);
+  const [showQuickActions, setShowQuickActions] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const [editMode, setEditMode] = useState(false);
 
   const [invoiceData, setInvoiceData] = useState<InvoiceData>({
     invoice_id: "",
@@ -31,11 +35,9 @@ export default function NewInvoice() {
   });
 
   const [messages, setMessages] = useState([
-    { sender: "ai", text: "Hello! Let's create your invoice. What is your business name?" }
+    { sender: "ai", text: "Hello! I'm your AI invoice assistant. What is your business name?" }
   ]);
   const [input, setInput] = useState("");
-  const [showPreview, setShowPreview] = useState(false);
-  const [editMode, setEditMode] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const isComplete =
@@ -43,21 +45,19 @@ export default function NewInvoice() {
     !!invoiceData.client_name &&
     invoiceData.items.length > 0;
 
+  /* ──────────── Recalculate Totals ──────────── */
+  useEffect(() => {
+    const subtotal = invoiceData.items.reduce((sum, i) => sum + i.quantity * i.unit_price, 0);
+    const total = subtotal + (subtotal * Math.max(0, invoiceData.tax_percentage)) / 100 - (invoiceData.discount || 0);
+    setInvoiceData(prev => ({ ...prev, subtotal, total }));
+  }, [invoiceData.items, invoiceData.tax_percentage, invoiceData.discount]);
+
+  /* ──────────── Auto‑scroll Chat ──────────── */
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Recalculate totals whenever items, tax, or discount change
-  useEffect(() => {
-    const subtotal = invoiceData.items.reduce(
-      (sum, i) => sum + i.quantity * i.unit_price,
-      0
-    );
-    const total =
-      subtotal + (subtotal * Math.max(0, invoiceData.tax_percentage)) / 100 - (invoiceData.discount || 0);
-    setInvoiceData(prev => ({ ...prev, subtotal, total }));
-  }, [invoiceData.items, invoiceData.tax_percentage, invoiceData.discount]);
-
+  /* ──────────── Send Message ──────────── */
   const handleSend = async () => {
     const text = input.trim();
     if (!text) return;
@@ -87,6 +87,7 @@ export default function NewInvoice() {
     }
   };
 
+  /* ──────────── Finalize Invoice ──────────── */
   const handleFinalize = async () => {
     const res = await fetch("/api/invoice/create", {
       method: "POST",
@@ -97,80 +98,91 @@ export default function NewInvoice() {
     else alert("Failed to save.");
   };
 
+  /* ──────────── Field / Item Helpers ──────────── */
   const updateField = (field: keyof InvoiceData, value: any) => {
     setInvoiceData(prev => ({ ...prev, [field]: value }));
   };
-
   const updateItem = (index: number, field: string, value: any) => {
     const newItems = [...invoiceData.items];
     newItems[index] = { ...newItems[index], [field]: value };
     setInvoiceData(prev => ({ ...prev, items: newItems }));
   };
-
   const addItem = () => {
-    setInvoiceData(prev => ({
-      ...prev,
-      items: [...prev.items, { description: "", quantity: 1, unit_price: 0 }]
-    }));
+    setInvoiceData(prev => ({ ...prev, items: [...prev.items, { description: "", quantity: 1, unit_price: 0 }] }));
   };
-
   const removeItem = (index: number) => {
     const newItems = invoiceData.items.filter((_, i) => i !== index);
     setInvoiceData(prev => ({ ...prev, items: newItems }));
   };
 
+  /* ──────────── Quick Actions Menu ──────────── */
+  const quickActions = [
+    { label: "Create Invoice", icon: "📄", href: "/new" },
+    { label: "Invoice History", icon: "📊", href: "/dashboard" },
+    { label: "Upload Logo", icon: "🖼️", action: () => document.getElementById("logoUpload")?.click() },
+    { label: "QR Code", icon: "🔳", action: () => document.getElementById("qrUpload")?.click() },
+    { label: "Smart AI", icon: useSmartAI ? "✨" : "💡", action: () => setUseSmartAI(!useSmartAI) },
+    { label: "Templates", icon: "📋", href: "#" },
+    { label: "Export PDF", icon: "📥", action: () => alert("Finish the invoice first") },
+    { label: "Clients", icon: "👥", href: "#" },
+  ];
+
   return (
     <div className="flex flex-col h-screen bg-gray-50">
-      {/* ───── Luxurious Header with iOS‑style Smart AI Toggle ───── */}
-      <header className="relative px-5 py-3 bg-gradient-to-r from-gray-900 via-slate-800 to-gray-900 border-b border-gray-800 shadow-2xl z-10">
-        <div className="flex items-center justify-between">
-          {/* Logo & App Name */}
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-xl overflow-hidden ring-2 ring-indigo-400/50 shadow-md transition hover:scale-105">
-              <img src="/logo.png" alt="Logo" className="h-full w-full object-cover" />
-            </div>
-            <h1 className="text-lg font-bold tracking-tight text-white">Zuniq Invoices</h1>
+      {/* ────────── Header ────────── */}
+      <header className="bg-white/90 backdrop-blur-md border-b border-gray-200 px-4 sm:px-6 py-3 flex items-center justify-between shadow-sm">
+        <div className="flex items-center gap-2.5">
+          <div className="h-8 w-8 rounded-lg overflow-hidden ring-2 ring-indigo-400/30">
+            <img src="/logo.png" alt="Logo" className="h-full w-full object-cover" />
           </div>
-
-          {/* Smart AI Toggle + Badge */}
-          <div className="flex items-center gap-3">
-            {/* iOS Toggle */}
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                className="sr-only peer"
-                checked={useSmartAI}
-                onChange={() => setUseSmartAI(!useSmartAI)}
-              />
-              <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-500 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-emerald-500 peer-checked:to-green-500 peer-checked:shadow-[0_0_12px_rgba(16,185,129,0.4)]"></div>
-            </label>
-            <span className="text-sm font-medium text-gray-300">
-              {useSmartAI ? "✨ Smart AI" : "Smart AI"}
-            </span>
-
-            {/* Divider */}
-            <div className="h-6 w-px bg-gray-600 mx-1" />
-
-            {/* AI Assistant badge */}
-            <div className="text-xs px-3 py-1 bg-indigo-600/30 rounded-full text-indigo-200 font-medium">
-              AI Assistant
-            </div>
-          </div>
+          <h1 className="text-lg font-semibold text-gray-800">Zuniq Invoices</h1>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowPreview(true)}
+            className="text-sm px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium transition"
+          >
+            📄 Preview
+          </button>
+          {isComplete && (
+            <button
+              onClick={handleFinalize}
+              className="text-sm px-4 py-2 rounded-lg bg-gradient-to-r from-emerald-500 to-green-600 text-white font-semibold shadow-lg hover:from-emerald-600 hover:to-green-700 transition"
+            >
+              Finalize ✨
+            </button>
+          )}
         </div>
       </header>
 
-      {/* ───── Chat Area (unchanged) ───── */}
-      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4 bg-gradient-to-b from-gray-50 to-white">
+      {/* ────────── Chat Area ────────── */}
+      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-5">
+        {/* Smart AI Selector at top of chat */}
+        <div className="flex items-center gap-2 text-sm text-gray-500 border-b border-gray-100 pb-3 mb-2">
+          <span className="font-medium text-gray-400">AI Mode:</span>
+          <div className="relative">
+            <select
+              value={useSmartAI ? "smart" : "normal"}
+              onChange={(e) => setUseSmartAI(e.target.value === "smart")}
+              className="appearance-none bg-white border border-gray-200 rounded-lg pl-3 pr-8 py-1.5 text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+            >
+              <option value="normal">📋 Normal Invoice Agent</option>
+              <option value="smart">✨ Smart AI</option>
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-gray-400">
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+            </div>
+          </div>
+        </div>
+
+        {/* Messages */}
         {messages.map((msg, i) => (
-          <div
-            key={i}
-            className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"} animate-fade-in`}
-          >
+          <div key={i} className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"} animate-fade-in`}>
             <div
-              className={`max-w-[80%] px-4 py-3 rounded-2xl text-sm leading-relaxed shadow-sm transition-all duration-300 ${
+              className={`max-w-[80%] px-4 py-3 rounded-2xl text-sm leading-relaxed shadow-sm transition-all duration-200 ${
                 msg.sender === "user"
-                  ? "bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-br-md hover:shadow-md"
-                  : "bg-white text-gray-800 rounded-bl-md border border-gray-100 hover:shadow-md"
+                  ? "bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-br-md"
+                  : "bg-white text-gray-800 rounded-bl-md border border-gray-100"
               }`}
             >
               {msg.text}
@@ -180,349 +192,146 @@ export default function NewInvoice() {
         <div ref={chatEndRef} />
       </div>
 
-      {/* ───── Glassmorphism Input Bar (unchanged) ───── */}
-      <div className="px-4 py-3 bg-white/80 backdrop-blur-lg border-t border-gray-200 flex items-center gap-2">
-        <input
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          onKeyDown={e => e.key === "Enter" && handleSend()}
-          placeholder="Type your answer..."
-          className="flex-1 h-12 px-4 rounded-xl border-0 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm transition"
-        />
-        <button
-          onClick={handleSend}
-          className="h-12 w-12 rounded-xl bg-gray-900 text-white flex items-center justify-center shadow-lg hover:bg-gray-800 active:scale-95 transition-all duration-200"
-        >
-          ➤
-        </button>
-        {isComplete && (
-          <button
-            onClick={handleFinalize}
-            className="h-12 px-5 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 text-white font-semibold shadow-lg hover:from-emerald-600 hover:to-green-700 active:scale-95 transition-all duration-200 text-sm"
-          >
-            Finalize ✨
-          </button>
-        )}
-      </div>
-
-      {/* ───── Mobile Preview Button & Sheet (unchanged) ───── */}
-      {!showPreview && (
-        <button
-          onClick={() => setShowPreview(true)}
-          className="md:hidden fixed bottom-24 right-5 h-14 w-14 rounded-full bg-gray-900 text-white shadow-2xl flex items-center justify-center animate-bounce-gentle z-40 hover:scale-105 transition"
-        >
-          <span className="text-xl">📄</span>
-        </button>
-      )}
-
-      {showPreview && (
-        <div className="md:hidden fixed inset-x-0 bottom-0 z-50 bg-white rounded-t-3xl shadow-2xl max-h-[85vh] overflow-y-auto animate-slide-up">
-          <div className="sticky top-0 bg-white pt-4 pb-2 px-6 flex justify-between items-center border-b border-gray-100">
-            <h2 className="text-lg font-bold text-gray-900">
-              {editMode ? "✏️ Edit Invoice" : "📄 Invoice Preview"}
-            </h2>
-            <div className="flex items-center gap-2">
-              {!editMode && (
-                <button
-                  onClick={() => setEditMode(true)}
-                  className="text-xs px-3 py-1 rounded-full bg-indigo-100 text-indigo-700 font-medium hover:bg-indigo-200 transition"
-                >
-                  ✏️ Edit
-                </button>
-              )}
-              {editMode && (
-                <button
-                  onClick={() => setEditMode(false)}
-                  className="text-xs px-3 py-1 rounded-full bg-gray-200 text-gray-700 font-medium hover:bg-gray-300 transition"
-                >
-                  👁 Preview
-                </button>
-              )}
-              <button
-                onClick={() => setShowPreview(false)}
-                className="text-gray-400 hover:text-gray-600 text-2xl transition"
-              >
-                ×
-              </button>
-            </div>
-          </div>
-          <div className="p-4">
-            {editMode ? (
-              <InvoiceEditForm
-                data={invoiceData}
-                updateField={updateField}
-                updateItem={updateItem}
-                addItem={addItem}
-                removeItem={removeItem}
-              />
-            ) : (
-              <>
-                <InvoicePreview data={invoiceData} />
-                {isComplete && (
-                  <button
-                    onClick={handleFinalize}
-                    className="mt-4 w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 text-white font-semibold shadow-lg hover:from-emerald-600 hover:to-green-700 active:scale-95 transition-all duration-200"
-                  >
-                    Save & Finalize Invoice
-                  </button>
-                )}
-              </>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* ───── Desktop Preview (unchanged) ───── */}
-      <div className="hidden md:block fixed right-0 top-0 h-full w-1/2 bg-white border-l border-gray-200 p-6 overflow-y-auto shadow-2xl">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">
-            {editMode ? "✏️ Edit Invoice" : "📄 Live Preview"}
-          </h2>
-          <div className="flex items-center gap-2">
-            {!editMode && (
-              <button
-                onClick={() => setEditMode(true)}
-                className="text-sm px-4 py-2 rounded-lg bg-indigo-100 text-indigo-700 font-medium hover:bg-indigo-200 transition-all duration-200"
-              >
-                ✏️ Edit
-              </button>
-            )}
-            {editMode && (
-              <button
-                onClick={() => setEditMode(false)}
-                className="text-sm px-4 py-2 rounded-lg bg-gray-200 text-gray-700 font-medium hover:bg-gray-300 transition-all duration-200"
-              >
-                👁 Preview
-              </button>
-            )}
-          </div>
+      {/* ────────── ChatGPT‑style Input Area ────────── */}
+      <div className="bg-white border-t border-gray-200 px-4 sm:px-6 py-3">
+        {/* Toolbar: Upload Logo, QR, and Smart AI selector (also present in chat area) */}
+        <div className="flex items-center gap-2 mb-2">
+          <label className="cursor-pointer text-xs px-3 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 font-medium transition flex items-center gap-1">
+            🖼️ Logo
+            <input
+              id="logoUpload"
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  const reader = new FileReader();
+                  reader.onload = (ev) => updateField("business_logo_url", ev.target?.result as string);
+                  reader.readAsDataURL(file);
+                }
+              }}
+            />
+          </label>
+          <label className="cursor-pointer text-xs px-3 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 font-medium transition flex items-center gap-1">
+            🔳 QR
+            <input
+              id="qrUpload"
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  const reader = new FileReader();
+                  reader.onload = (ev) => updateField("qr_code_data", ev.target?.result as string);
+                  reader.readAsDataURL(file);
+                }
+              }}
+            />
+          </label>
         </div>
 
-        {editMode ? (
-          <InvoiceEditForm
-            data={invoiceData}
-            updateField={updateField}
-            updateItem={updateItem}
-            addItem={addItem}
-            removeItem={removeItem}
+        {/* Message Input */}
+        <div className="flex items-center gap-2">
+          <input
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && handleSend()}
+            placeholder="Type your message..."
+            className="flex-1 h-12 px-4 rounded-xl border border-gray-200 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm transition"
           />
-        ) : (
-          <>
-            <InvoicePreview data={invoiceData} />
-            {isComplete && (
-              <button
-                onClick={handleFinalize}
-                className="mt-6 w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-green-600 text-white font-semibold shadow-lg hover:from-emerald-600 hover:to-green-700 active:scale-95 transition-all duration-200"
-              >
-                Save & Finalize Invoice
-              </button>
-            )}
-          </>
+          <button
+            onClick={handleSend}
+            className="h-12 w-12 rounded-xl bg-gray-900 text-white flex items-center justify-center shadow-lg hover:bg-gray-800 active:scale-95 transition"
+          >
+            ➤
+          </button>
+        </div>
+      </div>
+
+      {/* ────────── Floating Quick Actions Button ────────── */}
+      <div className="fixed bottom-20 right-4 z-40">
+        <button
+          onClick={() => setShowQuickActions(!showQuickActions)}
+          className="h-14 w-14 rounded-full bg-gray-900 text-white shadow-2xl flex items-center justify-center hover:scale-105 transition"
+        >
+          <span className="text-2xl">+</span>
+        </button>
+
+        {showQuickActions && (
+          <div className="absolute bottom-16 right-0 bg-white rounded-2xl shadow-2xl border border-gray-100 p-2 w-56 animate-fade-in">
+            {quickActions.map((action, idx) => (
+              action.href ? (
+                <a
+                  key={idx}
+                  href={action.href}
+                  className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition"
+                >
+                  <span className="text-lg">{action.icon}</span> {action.label}
+                </a>
+              ) : (
+                <button
+                  key={idx}
+                  onClick={action.action}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition"
+                >
+                  <span className="text-lg">{action.icon}</span> {action.label}
+                </button>
+              )
+            ))}
+          </div>
         )}
       </div>
-    </div>
-  );
-}
 
-/* ---------- Edit Form Component (with logo upload + signature upload) ---------- */
-function InvoiceEditForm({
-  data,
-  updateField,
-  updateItem,
-  addItem,
-  removeItem
-}: {
-  data: InvoiceData;
-  updateField: (field: keyof InvoiceData, value: any) => void;
-  updateItem: (index: number, field: string, value: any) => void;
-  addItem: () => void;
-  removeItem: (index: number) => void;
-}) {
-  return (
-    <div className="space-y-5">
-      {/* Business Details */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-xs font-semibold text-gray-500 mb-1">Business Name</label>
-          <input value={data.business_name} onChange={e => updateField("business_name", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200" />
-        </div>
-        <div>
-          <label className="block text-xs font-semibold text-gray-500 mb-1">Business Email</label>
-          <input value={data.business_email} onChange={e => updateField("business_email", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200" />
-        </div>
-        <div>
-          <label className="block text-xs font-semibold text-gray-500 mb-1">Business Phone</label>
-          <input value={data.business_phone} onChange={e => updateField("business_phone", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200" />
-        </div>
-        <div>
-          <label className="block text-xs font-semibold text-gray-500 mb-1">TRN Number</label>
-          <input value={data.trn_number} onChange={e => updateField("trn_number", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200" />
-        </div>
-        {/* Logo Upload Field */}
-        <div className="sm:col-span-2">
-          <label className="block text-xs font-semibold text-gray-500 mb-1">Business Logo</label>
-          <div className="flex items-center gap-3">
-            <input
-              value={data.business_logo_url}
-              onChange={e => updateField("business_logo_url", e.target.value)}
-              placeholder="Paste image URL or upload"
-              className="flex-1 h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200"
-            />
-            <label className="h-10 px-4 rounded-lg bg-indigo-100 text-indigo-700 font-medium text-sm flex items-center cursor-pointer hover:bg-indigo-200 transition-all duration-200">
-              📁 Upload
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (ev) => {
-                      updateField("business_logo_url", ev.target?.result as string);
-                    };
-                    reader.readAsDataURL(file);
-                  }
-                }}
-              />
-            </label>
+      {/* ────────── Preview Modal ────────── */}
+      {showPreview && (
+        <div
+          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
+          onClick={() => setShowPreview(false)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-4 sm:p-6"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-gray-900">📄 Invoice Preview</h2>
+              <button onClick={() => setShowPreview(false)} className="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+            </div>
+            <InvoicePreview data={invoiceData} />
           </div>
-          {data.business_logo_url && (
-            <div className="mt-2 flex items-center gap-2">
-              <img src={data.business_logo_url} alt="Logo preview" className="h-8 w-8 object-contain rounded border" />
-              <button
-                onClick={() => updateField("business_logo_url", "")}
-                className="text-xs text-red-500 hover:underline"
-              >
-                Remove
-              </button>
-            </div>
-          )}
         </div>
-        {/* Signature Upload Field */}
-        <div className="sm:col-span-2">
-          <label className="block text-xs font-semibold text-gray-500 mb-1">Digital Signature</label>
-          <div className="flex items-center gap-3">
-            <input
-              value={data.signature_url}
-              onChange={e => updateField("signature_url", e.target.value)}
-              placeholder="Paste image URL or upload"
-              className="flex-1 h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200"
-            />
-            <label className="h-10 px-4 rounded-lg bg-indigo-100 text-indigo-700 font-medium text-sm flex items-center cursor-pointer hover:bg-indigo-200 transition-all duration-200">
-              📁 Upload
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (ev) => {
-                      updateField("signature_url", ev.target?.result as string);
-                    };
-                    reader.readAsDataURL(file);
-                  }
-                }}
-              />
-            </label>
-          </div>
-          {data.signature_url && (
-            <div className="mt-2 flex items-center gap-2">
-              <img src={data.signature_url} alt="Signature preview" className="h-8 w-20 object-contain rounded border" />
-              <button
-                onClick={() => updateField("signature_url", "")}
-                className="text-xs text-red-500 hover:underline"
-              >
-                Remove
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
+      )}
 
-      {/* Client Details */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-xs font-semibold text-gray-500 mb-1">Client Name</label>
-          <input value={data.client_name} onChange={e => updateField("client_name", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200" />
-        </div>
-        <div>
-          <label className="block text-xs font-semibold text-gray-500 mb-1">Client Email</label>
-          <input value={data.client_email} onChange={e => updateField("client_email", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200" />
-        </div>
-        <div>
-          <label className="block text-xs font-semibold text-gray-500 mb-1">Client Phone</label>
-          <input value={data.client_phone} onChange={e => updateField("client_phone", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200" />
-        </div>
-        <div className="sm:col-span-2">
-          <label className="block text-xs font-semibold text-gray-500 mb-1">Client Address</label>
-          <input value={data.client_address} onChange={e => updateField("client_address", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200" />
-        </div>
-      </div>
-
-      {/* Items */}
-      <div>
-        <div className="flex justify-between items-center mb-2">
-          <label className="text-xs font-semibold text-gray-500">Items</label>
-          <button onClick={addItem} className="text-xs px-3 py-1 rounded-lg bg-indigo-100 text-indigo-700 font-medium hover:bg-indigo-200 transition-all duration-200">+ Add Item</button>
-        </div>
-        <div className="space-y-3">
-          {data.items.map((item, idx) => (
-            <div key={idx} className="grid grid-cols-12 gap-2 items-center">
-              <div className="col-span-5">
-                <input placeholder="Description" value={item.description} onChange={e => updateItem(idx, "description", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200" />
-              </div>
-              <div className="col-span-2">
-                <input type="number" placeholder="Qty" value={item.quantity} onChange={e => updateItem(idx, "quantity", parseFloat(e.target.value) || 0)} className="w-full h-10 px-2 rounded-lg border border-gray-200 text-sm text-center focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200" />
-              </div>
-              <div className="col-span-3">
-                <input type="number" placeholder="Price" value={item.unit_price} onChange={e => updateItem(idx, "unit_price", parseFloat(e.target.value) || 0)} className="w-full h-10 px-2 rounded-lg border border-gray-200 text-sm text-center focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200" />
-              </div>
-              <div className="col-span-1 text-right">
-                <button onClick={() => removeItem(idx)} className="text-red-500 hover:text-red-700 font-bold transition-colors duration-200">×</button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Tax & Discount */}
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-xs font-semibold text-gray-500 mb-1">Tax (%)</label>
-          <input type="number" value={data.tax_percentage === -1 ? 0 : data.tax_percentage} onChange={e => updateField("tax_percentage", parseFloat(e.target.value) || 0)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200" />
-        </div>
-        <div>
-          <label className="block text-xs font-semibold text-gray-500 mb-1">Discount</label>
-          <input type="number" value={data.discount === -1 ? 0 : data.discount} onChange={e => updateField("discount", parseFloat(e.target.value) || 0)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200" />
-        </div>
-      </div>
-
-      {/* Dates */}
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-xs font-semibold text-gray-500 mb-1">Issue Date</label>
-          <input type="date" value={data.issue_date} onChange={e => updateField("issue_date", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200" />
-        </div>
-        <div>
-          <label className="block text-xs font-semibold text-gray-500 mb-1">Due Date</label>
-          <input type="date" value={data.due_date} onChange={e => updateField("due_date", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200" />
-        </div>
-      </div>
-
-      {/* QR Code Data */}
-      <div>
-        <label className="block text-xs font-semibold text-gray-500 mb-1">QR Code Data (text or URL)</label>
-        <input value={data.qr_code_data} onChange={e => updateField("qr_code_data", e.target.value)} className="w-full h-10 px-3 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200" placeholder="Payment link or any text" />
-      </div>
-
-      {/* Notes */}
-      <div>
-        <label className="block text-xs font-semibold text-gray-500 mb-1">Notes</label>
-        <textarea value={data.notes} onChange={e => updateField("notes", e.target.value)} rows={2} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-200" />
-      </div>
+      {/* Hidden file inputs for Quick Actions */}
+      <input
+        id="logoUploadHidden"
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = (ev) => updateField("business_logo_url", ev.target?.result as string);
+            reader.readAsDataURL(file);
+          }
+        }}
+      />
+      <input
+        id="qrUploadHidden"
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = (ev) => updateField("qr_code_data", ev.target?.result as string);
+            reader.readAsDataURL(file);
+          }
+        }}
+      />
     </div>
   );
 }
