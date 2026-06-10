@@ -22,14 +22,14 @@ export interface InvoiceData {
   notes: string;
 }
 
-// ============ RULE-BASED AI (ORIGINAL) ============
-const fieldOrder: { key: keyof InvoiceData; question: string; hint: string }[] = [
-  { key: "business_name", question: "What is your business name?", hint: "e.g. Pharmacos Skincare Trading FZC" },
-  { key: "business_email", question: "What's your business email?", hint: "e.g. official@example.com" },
+// ---------- Rule‑Based AI (with basic common sense) ----------
+const fieldOrder: { key: keyof InvoiceData; question: string; hint: string; sensible?: boolean }[] = [
+  { key: "business_name", question: "What is your business name?", hint: "Your company or personal name.", sensible: true },
+  { key: "business_email", question: "What's your business email?", hint: "e.g. hello@example.com" },
   { key: "business_phone", question: "What's your business phone number?", hint: "e.g. 00971507024817" },
   { key: "trn_number", question: "What is your TRN (Tax Registration Number)?", hint: "e.g. 104790700900001" },
   { key: "business_logo_url", question: "Do you have a logo? You can upload one later, or type 'skip'.", hint: "You can paste a URL or upload a file from the edit form." },
-  { key: "client_name", question: "Who is the client?", hint: "Client's full name." },
+  { key: "client_name", question: "Who is the client?", hint: "Client's full name.", sensible: true },
   { key: "client_email", question: "What is the client's email?", hint: "Client email address." },
   { key: "client_phone", question: "What is the client's phone number?", hint: "e.g. 056 950 5008" },
   { key: "client_address", question: "What is the client's address?", hint: "City or full address." },
@@ -41,6 +41,24 @@ const fieldOrder: { key: keyof InvoiceData; question: string; hint: string }[] =
   { key: "qr_code_data", question: "Any QR code? Enter text or URL to encode (or type 'none')", hint: "e.g. your payment link" },
   { key: "notes", question: "Any payment instructions or additional notes?", hint: "e.g. 'Credit, payment due within 30 days'" },
 ];
+
+// Simple list of obviously fake names
+const invalidNames = ["no name", "nothing", "none", "asdf", "xyz", "test", "unknown", "n/a", "na"];
+
+function isSensibleAnswer(key: string, answer: string): boolean {
+  if (key === "business_name" || key === "client_name") {
+    const lower = answer.trim().toLowerCase();
+    if (lower.length < 2 || invalidNames.includes(lower)) return false;
+    // Reject if it looks like a single random character
+    if (/^[a-z0-9]{1}$/.test(lower)) return false;
+  }
+  // For email fields, a very basic sanity check
+  if (key === "business_email" || key === "client_email") {
+    const trimmed = answer.trim();
+    if (!trimmed.includes("@") || !trimmed.includes(".")) return false;
+  }
+  return true;
+}
 
 function getNextMissing(data: InvoiceData): number {
   for (let i = 0; i < fieldOrder.length; i++) {
@@ -78,11 +96,20 @@ function applyAnswer(data: InvoiceData, fieldIndex: number, answer: string) {
   }
 }
 
-function ruleBasedChat(msg: string, currentData: InvoiceData): { reply: string; updatedData: InvoiceData } {
+export function processChat(
+  msg: string,
+  currentData: InvoiceData,
+  history: string[],
+  useGemini: boolean = false
+): { reply: string; updatedData: InvoiceData } {
+  // Gemini path handled externally via useGemini flag, but here we only implement rule‑based.
+  // (The chat route will call the Gemini function separately if useGemini is true – we keep that logic in the route.)
+  // For now, we just implement the rule‑based part. The dual AI logic is in the chat route.
   const data = { ...currentData, items: currentData.items.map((i) => ({ ...i })) };
   const t = msg.trim();
   const lower = t.toLowerCase();
 
+  // Greetings
   if (["hello", "hi", "hey", "good morning"].some(g => lower.includes(g))) {
     const nextIdx = getNextMissing(data);
     return {
@@ -90,9 +117,11 @@ function ruleBasedChat(msg: string, currentData: InvoiceData): { reply: string; 
       updatedData: data,
     };
   }
+  // Thanks
   if (["thanks", "thank you", "thx"].some(g => lower.includes(g))) {
     return { reply: "You're welcome! 😊", updatedData: data };
   }
+  // Help
   if (["help", "not sure", "idk"].some(g => lower.includes(g))) {
     const nextIdx = getNextMissing(data);
     if (nextIdx === -1) return { reply: "All set!", updatedData: data };
@@ -108,6 +137,15 @@ function ruleBasedChat(msg: string, currentData: InvoiceData): { reply: string; 
     return { reply: "All information collected! You can review and finalize.", updatedData: data };
   }
 
+  // Check if the answer is sensible for this field
+  const fieldKey = fieldOrder[missingIdx].key;
+  if (fieldOrder[missingIdx].sensible && !isSensibleAnswer(fieldKey, t)) {
+    return {
+      reply: `That doesn't seem like a valid ${fieldKey.replace(/_/g, " ")}. ${fieldOrder[missingIdx].hint} Please try again.`,
+      updatedData: data,
+    };
+  }
+
   applyAnswer(data, missingIdx, t);
   const subtotal = data.items.reduce((sum, i) => sum + i.quantity * i.unit_price, 0);
   const total = subtotal + (subtotal * data.tax_percentage / 100) - data.discount;
@@ -117,51 +155,4 @@ function ruleBasedChat(msg: string, currentData: InvoiceData): { reply: string; 
   const nextIdx = getNextMissing(data);
   if (nextIdx === -1) return { reply: "All information collected! You can review and finalize.", updatedData: data };
   return { reply: fieldOrder[nextIdx].question, updatedData: data };
-}
-
-// ============ GEMINI AI (FALLBACK) ============
-const GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent";
-
-async function geminiChat(msg: string, currentData: InvoiceData, history: string[]): Promise<{ reply: string; updatedData: InvoiceData }> {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) throw new Error("GEMINI_API_KEY not set");
-
-  const prev = history.map((m, i) => `[${i % 2 === 0 ? "AI" : "User"}]: ${m}`).join("\n");
-  const prompt = `You are an invoice assistant. Current data: ${JSON.stringify(currentData)}. Conversation: ${prev}. User: ${msg}. Output ONLY: {"reply":"...", "updatedData": {...}}`;
-
-  const res = await fetch(`${GEMINI_URL}?key=${apiKey}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.3, maxOutputTokens: 1500 },
-    }),
-  });
-
-  if (!res.ok) throw new Error("Gemini API failed");
-  const json = await res.json();
-  const text = json.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!text) throw new Error("No response");
-  const match = text.match(/\{[\s\S]*\}/);
-  if (!match) throw new Error("Invalid JSON");
-  const parsed = JSON.parse(match[0]);
-  const updated = { ...currentData, ...parsed.updatedData };
-  return { reply: parsed.reply, updatedData: updated };
-}
-
-// ============ MAIN EXPORT ============
-export async function processChat(
-  msg: string,
-  currentData: InvoiceData,
-  history: string[],
-  useGemini: boolean = false
-): Promise<{ reply: string; updatedData: InvoiceData }> {
-  if (useGemini) {
-    try {
-      return await geminiChat(msg, currentData, history);
-    } catch (e) {
-      console.error("Gemini failed, falling back to rule-based AI", e);
-    }
-  }
-  return ruleBasedChat(msg, currentData);
 }
