@@ -22,132 +22,125 @@ export interface InvoiceData {
   notes: string;
 }
 
-function calculateTotals(data: InvoiceData) {
-  const subtotal = data.items.reduce((sum, i) => sum + i.quantity * i.unit_price, 0);
-  const total = subtotal + (subtotal * Math.max(0, data.tax_percentage)) / 100 - (data.discount || 0);
-  return { subtotal, total };
-}
+const fieldOrder: { key: keyof InvoiceData; question: string; hint: string }[] = [
+  { key: "business_name", question: "What is your business name?", hint: "e.g. Pharmacos Skincare Trading FZC" },
+  { key: "business_email", question: "What's your business email?", hint: "e.g. official@example.com" },
+  { key: "business_phone", question: "What's your business phone number?", hint: "e.g. 00971507024817" },
+  { key: "trn_number", question: "What is your TRN (Tax Registration Number)?", hint: "e.g. 104790700900001" },
+  { key: "business_logo_url", question: "Do you have a logo? You can upload one later in the editor, or type 'skip'.", hint: "You can paste a URL or upload a file from the edit form." },
+  { key: "client_name", question: "Who is the client?", hint: "Client's full name." },
+  { key: "client_email", question: "What is the client's email?", hint: "Client email address." },
+  { key: "client_phone", question: "What is the client's phone number?", hint: "e.g. 056 950 5008" },
+  { key: "client_address", question: "What is the client's address?", hint: "City or full address." },
+  { key: "currency", question: "Which currency should we use? (USD, EUR, AED, etc.)", hint: "e.g. AED" },
+  { key: "items", question: "What service or products did you provide? Describe the items and prices.", hint: "e.g. Disaar sunscreen 2 x 11.50 AED" },
+  { key: "tax_percentage", question: "Any tax percentage? (just the number, or 0 for none)", hint: "e.g. 5" },
+  { key: "discount", question: "Any discount amount?", hint: "e.g. 100 or 0 for none" },
+  { key: "due_date", question: "What is the due date? (e.g., 2026-06-15)", hint: "Date format: YYYY-MM-DD" },
+  { key: "qr_code_data", question: "Any QR code? Enter text or URL to encode (or type 'none')", hint: "e.g. your payment link" },
+  { key: "notes", question: "Any payment instructions or additional notes?", hint: "e.g. 'Credit, payment due within 30 days'" },
+];
 
-const GEMINI_API_URL =
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent";
-
-const SYSTEM_PROMPT = `You are a friendly, professional AI invoice assistant for "Zuniq Invoices".
-Your job is to collect information from the user step by step to build a complete invoice.
-You are given the current invoice data in JSON format and the conversation history.
-Your task is to:
-- Check which fields are still missing or empty.
-- Ask ONE question at a time to fill the next missing field.
-- If the user corrects a previous answer, update that field and thank them.
-- Never repeat a question that has already been answered.
-- If all fields are filled, respond that the invoice is complete and the user can review it.
-
-You must output your response in the following JSON format ONLY:
-{
-  "reply": "your message to the user",
-  "updatedData": { ... the updated invoice object with all fields }
-}
-
-Important fields and their order:
-1. business_name
-2. business_email
-3. business_phone
-4. trn_number
-5. business_logo_url (optional)
-6. client_name
-7. client_email
-8. client_phone
-9. client_address
-10. currency
-11. items (list of { description, quantity, unit_price })
-12. tax_percentage
-13. discount
-14. due_date
-15. qr_code_data (optional)
-16. notes (optional)
-17. signature_url (optional)`;
-
-async function callGemini(
-  currentData: InvoiceData,
-  userMessage: string,
-  history: string[]
-): Promise<{ reply: string; updatedData: InvoiceData }> {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) throw new Error("GEMINI_API_KEY is not set");
-
-  const previousMessages = history
-    .map((msg, idx) => `[${idx % 2 === 0 ? "AI" : "User"}]: ${msg}`)
-    .join("\n");
-
-  const fullPrompt = `
-Current invoice data (JSON):
-${JSON.stringify(currentData, null, 2)}
-
-Previous conversation:
-${previousMessages}
-
-User's latest message:
-${userMessage}
-
-Remember: output ONLY the JSON object with "reply" and "updatedData".`;
-
-  const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents: [
-        {
-          role: "user",
-          parts: [{ text: SYSTEM_PROMPT + "\n\n" + fullPrompt }],
-        },
-      ],
-      generationConfig: {
-        temperature: 0.3,
-        maxOutputTokens: 1500,
-      },
-    }),
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Gemini API error: ${errorText}`);
+function getNextMissing(data: InvoiceData): number {
+  for (let i = 0; i < fieldOrder.length; i++) {
+    const key = fieldOrder[i].key;
+    const val = data[key];
+    if (key === "items") {
+      const hasDescription = data.items.length > 0 && data.items.some(item => item.description.trim() !== "");
+      if (!hasDescription) return i;
+    } else if (key === "tax_percentage" || key === "discount") {
+      if (val === -1) return i;
+    } else if (typeof val === "string" && val.trim() === "") {
+      return i;
+    }
   }
-
-  const json = await response.json();
-  const content = json.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!content) throw new Error("No content in Gemini response");
-
-  const jsonMatch = content.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) throw new Error("Failed to parse JSON from Gemini response");
-
-  const parsed = JSON.parse(jsonMatch[0]);
-
-  const updatedData: InvoiceData = {
-    ...currentData,
-    ...parsed.updatedData,
-  };
-  const totals = calculateTotals(updatedData);
-  updatedData.subtotal = totals.subtotal;
-  updatedData.total = totals.total;
-  updatedData.issue_date = updatedData.issue_date || new Date().toISOString().split("T")[0];
-
-  return {
-    reply: parsed.reply || "I didn't understand that. Could you rephrase?",
-    updatedData,
-  };
+  return -1;
 }
 
-export async function processChat(
+function applyAnswer(data: InvoiceData, fieldIndex: number, answer: string) {
+  const key = fieldOrder[fieldIndex].key;
+  const trimmed = answer.trim();
+
+  if (key === "items") {
+    const parts = trimmed.match(/^(.+?)\s+(\d+(?:\.\d+)?)\s*$/);
+    if (parts) {
+      data.items = [{ description: parts[1], quantity: 1, unit_price: parseFloat(parts[2]) }];
+    } else {
+      data.items = [{ description: trimmed, quantity: 1, unit_price: 0 }];
+    }
+  } else if (key === "tax_percentage" || key === "discount") {
+    const num = parseFloat(trimmed);
+    (data as any)[key] = isNaN(num) ? 0 : num;
+  } else if (key === "currency") {
+    data.currency = trimmed.toUpperCase() || "AED";
+  } else {
+    (data as any)[key] = trimmed;
+  }
+}
+
+export function processChat(
   msg: string,
   currentData: InvoiceData,
   history: string[]
-): Promise<{ reply: string; updatedData: InvoiceData }> {
-  try {
-    return await callGemini(currentData, msg, history);
-  } catch (error: any) {
-    console.error("Gemini error:", error);
+): { reply: string; updatedData: InvoiceData } {
+  const data = { ...currentData, items: currentData.items.map((i) => ({ ...i })) };
+  const t = msg.trim();
+  const lower = t.toLowerCase();
+
+  // Greetings
+  if (["hello", "hi", "hey", "good morning", "good afternoon", "good evening", "yo"].some(g => lower.includes(g))) {
+    const nextIdx = getNextMissing(data);
     return {
-      reply: "I'm sorry, I had a little trouble understanding that. Could you try again?",
-      updatedData: currentData,
+      reply: nextIdx === -1
+        ? "Hello! All invoice details are filled. You can review and finalize."
+        : `Hello! ${fieldOrder[nextIdx].question}`,
+      updatedData: data,
     };
   }
+
+  // Thanks
+  if (["thanks", "thank you", "thx", "appreciate"].some(g => lower.includes(g))) {
+    return { reply: "You're welcome! 😊", updatedData: data };
+  }
+
+  // Help
+  if (["help", "not sure", "what do you mean", "idk", "i don't know", "confused"].some(phrase => lower.includes(phrase))) {
+    const nextIdx = getNextMissing(data);
+    if (nextIdx === -1) return { reply: "All set! You can finalize the invoice.", updatedData: data };
+    return { reply: `No problem! ${fieldOrder[nextIdx].hint}`, updatedData: data };
+  }
+
+  // Find first missing field
+  const missingIdx = getNextMissing(data);
+
+  if (missingIdx === -1) {
+    const subtotal = data.items.reduce((sum, i) => sum + i.quantity * i.unit_price, 0);
+    const total = subtotal + (subtotal * data.tax_percentage / 100) - data.discount;
+    data.subtotal = subtotal;
+    data.total = total;
+    return {
+      reply: "All information collected! You can review your invoice on the right. Want to make changes or finalize?",
+      updatedData: data,
+    };
+  }
+
+  applyAnswer(data, missingIdx, t);
+
+  const subtotal = data.items.reduce((sum, i) => sum + i.quantity * i.unit_price, 0);
+  const total = subtotal + (subtotal * data.tax_percentage / 100) - data.discount;
+  data.subtotal = subtotal;
+  data.total = total;
+
+  const nextIdx = getNextMissing(data);
+  if (nextIdx === -1) {
+    return {
+      reply: "All information collected! You can review your invoice on the right. Want to make changes or finalize?",
+      updatedData: data,
+    };
+  }
+
+  return {
+    reply: fieldOrder[nextIdx].question,
+    updatedData: data,
+  };
 }
