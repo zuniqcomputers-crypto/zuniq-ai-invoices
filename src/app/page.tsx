@@ -7,11 +7,11 @@ export default function LandingPage() {
 
   return (
     <div className="bg-white text-gray-800 overflow-x-hidden">
-      {/* ---- Navigation (sticky, never hides) ---- */}
+      {/* ---- Navigation ---- */}
       <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-100 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5 shrink-0">
-            <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl overflow-hidden ring-2 ring-indigo-400/50 shadow-md bg-white p-0.5 flex-shrink-0">
+            <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-xl overflow-hidden ring-2 ring-indigo-400/50 shadow-md bg-white p-0.5 flex-shrink-0">
               <img
                 src="/logo.png"
                 alt="Logo"
@@ -54,7 +54,7 @@ export default function LandingPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-start mb-4">
-              <h2 className="text-2xl font-bold text-gray-900">☕ Buy me a coffee</h2>
+              <h2 className="text-2xl font-bold text-gray-900">☕ Support us</h2>
               <button
                 onClick={() => setShowSupport(false)}
                 className="text-gray-400 hover:text-gray-600 text-3xl leading-none"
@@ -63,24 +63,19 @@ export default function LandingPage() {
               </button>
             </div>
             <p className="text-gray-600 mb-6">
-              Zuniq Invoices is free forever. If it saves you time, support the project with a small donation.
+              Zuniq Invoices is free forever. If it saves you time, support the project with a small donation via Ko‑fi — it's safe and instant.
             </p>
-            <div className="bg-gray-50 rounded-2xl p-4 mb-4">
-              <p className="text-sm font-semibold text-gray-500 mb-2">Bank Account Details</p>
-              <p className="text-gray-800 font-medium">Account Name: <span className="font-normal">[ZAFAR KHAN]</span></p>
-              <p className="text-gray-800 font-medium">Account Number: <span className="font-normal">[0215668201005729]</span></p>
-              <p className="text-gray-800 font-medium">Bank: <span className="font-normal">[MCB Bank Limited]</span></p>
-              <p className="text-gray-800 font-medium">IBAN: <span className="font-normal">[PK81MUCB0215668201005729]</span></p>
-            </div>
-            <p className="text-xs text-gray-400">You can also use the button below to donate via card.</p>
             <a
-              href="https://www.buymeacoffee.com/zuniq" // Replace with actual Buy Me a Coffee link if you have one
+              href="https://ko-fi.com/zuniqinvoices"
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-4 block w-full text-center py-3 bg-yellow-400 hover:bg-yellow-300 text-gray-900 rounded-xl font-bold transition-colors"
+              className="block w-full text-center py-4 bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-300 hover:to-orange-300 text-gray-900 rounded-2xl font-bold text-lg shadow-xl transition-all hover:scale-105"
             >
-              Donate with card
+              ☕️ Support on Ko‑fi
             </a>
+            <p className="mt-4 text-xs text-gray-400 text-center">
+              You can donate with a card or PayPal. No account needed.
+            </p>
           </div>
         </div>
       )}
@@ -208,7 +203,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ---- Story (elder brother) ---- */}
+      {/* ---- Story ---- */}
       <section className="py-20 sm:py-24 bg-gray-900 text-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
           <h2 className="text-3xl sm:text-4xl font-bold mb-6 sm:mb-8">Built from a real frustration</h2>
