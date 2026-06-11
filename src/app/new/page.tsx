@@ -57,11 +57,88 @@ const icons = {
   ),
 };
 
+/* ────────── Templates Data ────────── */
+const templates = [
+  {
+    name: "Freelance Design",
+    description: "Logo design, 2 items, tax 5%",
+    data: {
+      business_name: "Design Studio",
+      business_email: "hello@designstudio.com",
+      client_name: "Client Co.",
+      client_email: "client@example.com",
+      currency: "USD",
+      items: [
+        { description: "Logo design", quantity: 1, unit_price: 500 },
+        { description: "Brand guidelines", quantity: 1, unit_price: 300 }
+      ],
+      tax_percentage: 5,
+      discount: 0,
+      notes: "Thank you for your business!"
+    }
+  },
+  {
+    name: "Consulting",
+    description: "Strategy session, 1 item, no tax",
+    data: {
+      business_name: "Zuniq Consulting",
+      business_email: "info@zuniqconsulting.com",
+      client_name: "Acme Corp",
+      client_email: "acme@example.com",
+      currency: "AED",
+      items: [
+        { description: "Strategy session (2 hours)", quantity: 2, unit_price: 750 }
+      ],
+      tax_percentage: 0,
+      discount: 0,
+      notes: "Payment due within 15 days."
+    }
+  },
+  {
+    name: "Agency",
+    description: "Multiple items, tax 5%, discount 50",
+    data: {
+      business_name: "Creative Agency",
+      business_email: "team@creativeagency.com",
+      client_name: "Global Brand",
+      client_email: "brand@example.com",
+      currency: "EUR",
+      items: [
+        { description: "Social media graphics", quantity: 5, unit_price: 120 },
+        { description: "Website banners", quantity: 3, unit_price: 200 }
+      ],
+      tax_percentage: 5,
+      discount: 50,
+      notes: "Revision included. Contact for any issues."
+    }
+  },
+  {
+    name: "Product Sale",
+    description: "Physical goods, 3 items, tax 10%",
+    data: {
+      business_name: "StoreX",
+      business_email: "orders@storex.com",
+      client_name: "John Doe",
+      client_email: "john@example.com",
+      currency: "USD",
+      items: [
+        { description: "T-shirt", quantity: 2, unit_price: 25 },
+        { description: "Mug", quantity: 1, unit_price: 15 },
+        { description: "Sticker pack", quantity: 3, unit_price: 8 }
+      ],
+      tax_percentage: 10,
+      discount: 20,
+      notes: "Shipped within 3-5 business days."
+    }
+  }
+];
+
 export default function NewInvoice() {
   /* ──────────── States ──────────── */
   const [useSmartAI, setUseSmartAI] = useState(false);
   const [showQuickActions, setShowQuickActions] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
 
   const [invoiceData, setInvoiceData] = useState<InvoiceData>({
     invoice_id: "",
@@ -105,9 +182,9 @@ export default function NewInvoice() {
     setInvoiceData(prev => ({ ...prev, subtotal, total }));
   }, [invoiceData.items, invoiceData.tax_percentage, invoiceData.discount]);
 
-  /* ──────────── Auto‑scroll Chat ──────────── */
+  /* ──────────── Auto‑scroll Chat (always to bottom) ──────────── */
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    chatEndRef.current?.scrollIntoView({ behavior: "auto" });
   }, [messages]);
 
   /* ──────────── Send Message ──────────── */
@@ -155,18 +232,6 @@ export default function NewInvoice() {
   const updateField = (field: keyof InvoiceData, value: any) => {
     setInvoiceData(prev => ({ ...prev, [field]: value }));
   };
-  const updateItem = (index: number, field: string, value: any) => {
-    const newItems = [...invoiceData.items];
-    newItems[index] = { ...newItems[index], [field]: value };
-    setInvoiceData(prev => ({ ...prev, items: newItems }));
-  };
-  const addItem = () => {
-    setInvoiceData(prev => ({ ...prev, items: [...prev.items, { description: "", quantity: 1, unit_price: 0 }] }));
-  };
-  const removeItem = (index: number) => {
-    const newItems = invoiceData.items.filter((_, i) => i !== index);
-    setInvoiceData(prev => ({ ...prev, items: newItems }));
-  };
 
   /* ──────────── Quick Actions Menu ──────────── */
   const quickActions = [
@@ -175,7 +240,7 @@ export default function NewInvoice() {
     { label: "Upload Logo", icon: icons.logo, action: () => document.getElementById("logoUpload")?.click() },
     { label: "QR Code", icon: icons.qr, action: () => document.getElementById("qrUpload")?.click() },
     { label: "Smart AI", icon: icons.smart, action: () => setUseSmartAI(!useSmartAI) },
-    { label: "Templates", icon: icons.templates, action: () => alert("Templates coming soon! We're working on a gallery of professional invoice templates.") },
+    { label: "Templates", icon: icons.templates, action: () => setShowTemplates(true) },
     { label: "Export PDF", icon: icons.export, action: () => { if (isComplete) handleFinalize(); else alert("Please complete the invoice before exporting."); } },
     { label: "Clients", icon: icons.clients, action: () => alert("Client database coming soon! You'll be able to save and reuse client information.") },
     { label: "Preview", icon: icons.preview, action: () => setShowPreview(true) },
@@ -211,24 +276,6 @@ export default function NewInvoice() {
 
       {/* ────────── Chat Area ────────── */}
       <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-5">
-        {/* Smart AI Selector at top of chat */}
-        <div className="flex items-center gap-2 text-sm text-gray-500 border-b border-gray-100 pb-3 mb-2">
-          <span className="font-medium text-gray-400">AI Mode:</span>
-          <div className="relative">
-            <select
-              value={useSmartAI ? "smart" : "normal"}
-              onChange={(e) => setUseSmartAI(e.target.value === "smart")}
-              className="appearance-none bg-white border border-gray-200 rounded-lg pl-3 pr-8 py-1.5 text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer"
-            >
-              <option value="normal">📋 Normal Invoice Agent</option>
-              <option value="smart">✨ Smart AI</option>
-            </select>
-            <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-gray-400">
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
-            </div>
-          </div>
-        </div>
-
         {/* Messages */}
         {messages.map((msg, i) => (
           <div key={i} className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"} animate-fade-in`}>
@@ -248,45 +295,6 @@ export default function NewInvoice() {
 
       {/* ────────── ChatGPT‑style Input Area ────────── */}
       <div className="bg-white border-t border-gray-200 px-4 sm:px-6 py-3">
-        {/* Toolbar: Upload Logo, QR */}
-        <div className="flex items-center gap-2 mb-2">
-          <label className="cursor-pointer text-xs px-3 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 font-medium transition flex items-center gap-1">
-            🖼️ Logo
-            <input
-              id="logoUpload"
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) {
-                  const reader = new FileReader();
-                  reader.onload = (ev) => updateField("business_logo_url", ev.target?.result as string);
-                  reader.readAsDataURL(file);
-                }
-              }}
-            />
-          </label>
-          <label className="cursor-pointer text-xs px-3 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 font-medium transition flex items-center gap-1">
-            🔳 QR
-            <input
-              id="qrUpload"
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) {
-                  const reader = new FileReader();
-                  reader.onload = (ev) => updateField("qr_code_data", ev.target?.result as string);
-                  reader.readAsDataURL(file);
-                }
-              }}
-            />
-          </label>
-        </div>
-
-        {/* Message Input */}
         <div className="flex items-center gap-2">
           <input
             value={input}
@@ -349,6 +357,49 @@ export default function NewInvoice() {
           </div>
         </div>
       )}
+
+      {/* ────────── Templates Modal ────────── */}
+      {showTemplates && (
+        <div
+          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
+          onClick={() => setShowTemplates(false)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 sm:p-8"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-gray-900">📋 Invoice Templates</h2>
+              <button onClick={() => setShowTemplates(false)} className="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+            </div>
+            <div className="grid gap-3">
+              {templates.map((t, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    setInvoiceData({ ...invoiceData, ...t.data });
+                    setShowTemplates(false);
+                    setMessages([...messages, { sender: "ai", text: `Loaded "${t.name}" template. You can edit the details in the preview.` }]);
+                  }}
+                  className="flex items-center gap-3 p-4 rounded-xl border border-gray-200 hover:border-indigo-200 hover:bg-indigo-50 transition text-left"
+                >
+                  <div className="h-10 w-10 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold">
+                    {t.name.charAt(0)}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">{t.name}</p>
+                    <p className="text-xs text-gray-500">{t.description}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Hidden file inputs for Quick Actions */}
+      <input id="logoUpload" type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) { const reader = new FileReader(); reader.onload = (ev) => updateField("business_logo_url", ev.target?.result as string); reader.readAsDataURL(file); }}} />
+      <input id="qrUpload" type="file" accept="image/*" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) { const reader = new FileReader(); reader.onload = (ev) => updateField("qr_code_data", ev.target?.result as string); reader.readAsDataURL(file); }}} />
     </div>
   );
 }
