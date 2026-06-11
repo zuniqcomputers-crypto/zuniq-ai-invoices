@@ -3,12 +3,65 @@ import { useState, useRef, useEffect } from "react";
 import InvoicePreview from "@/components/InvoicePreview";
 import { InvoiceData } from "@/utils/ai";
 
+/* ────────── Professional SVG Icons ────────── */
+const icons = {
+  create: (
+    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+    </svg>
+  ),
+  history: (
+    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  ),
+  logo: (
+    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+    </svg>
+  ),
+  qr: (
+    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v1m6 11h2m-6 0h-2m4 0v2m-8-2h2m-4 0h2m8-6h-2m0 0V6m0 0H6m0 0v2m0 2h2m10 0h2m-2 0v2m-4 0h-2m0-2V6m-4 0v2m0 2h2m-2 0V6" />
+      <rect x="4" y="4" width="6" height="6" rx="1" strokeWidth={2} />
+      <rect x="14" y="4" width="6" height="6" rx="1" strokeWidth={2} />
+      <rect x="4" y="14" width="6" height="6" rx="1" strokeWidth={2} />
+      <rect x="14" y="14" width="6" height="6" rx="1" strokeWidth={2} />
+    </svg>
+  ),
+  smart: (
+    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
+    </svg>
+  ),
+  templates: (
+    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    </svg>
+  ),
+  export: (
+    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+    </svg>
+  ),
+  clients: (
+    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>
+  ),
+  preview: (
+    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+    </svg>
+  ),
+};
+
 export default function NewInvoice() {
   /* ──────────── States ──────────── */
   const [useSmartAI, setUseSmartAI] = useState(false);
   const [showQuickActions, setShowQuickActions] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
-  const [editMode, setEditMode] = useState(false);
 
   const [invoiceData, setInvoiceData] = useState<InvoiceData>({
     invoice_id: "",
@@ -117,14 +170,15 @@ export default function NewInvoice() {
 
   /* ──────────── Quick Actions Menu ──────────── */
   const quickActions = [
-    { label: "Create Invoice", icon: "📄", href: "/new" },
-    { label: "Invoice History", icon: "📊", href: "/dashboard" },
-    { label: "Upload Logo", icon: "🖼️", action: () => document.getElementById("logoUpload")?.click() },
-    { label: "QR Code", icon: "🔳", action: () => document.getElementById("qrUpload")?.click() },
-    { label: "Smart AI", icon: useSmartAI ? "✨" : "💡", action: () => setUseSmartAI(!useSmartAI) },
-    { label: "Templates", icon: "📋", href: "#" },
-    { label: "Export PDF", icon: "📥", action: () => alert("Finish the invoice first") },
-    { label: "Clients", icon: "👥", href: "#" },
+    { label: "Create Invoice", icon: icons.create, action: () => { window.location.href = "/new"; } },
+    { label: "Invoice History", icon: icons.history, action: () => { window.location.href = "/dashboard"; } },
+    { label: "Upload Logo", icon: icons.logo, action: () => document.getElementById("logoUpload")?.click() },
+    { label: "QR Code", icon: icons.qr, action: () => document.getElementById("qrUpload")?.click() },
+    { label: "Smart AI", icon: icons.smart, action: () => setUseSmartAI(!useSmartAI) },
+    { label: "Templates", icon: icons.templates, action: () => alert("Templates coming soon! We're working on a gallery of professional invoice templates.") },
+    { label: "Export PDF", icon: icons.export, action: () => { if (isComplete) handleFinalize(); else alert("Please complete the invoice before exporting."); } },
+    { label: "Clients", icon: icons.clients, action: () => alert("Client database coming soon! You'll be able to save and reuse client information.") },
+    { label: "Preview", icon: icons.preview, action: () => setShowPreview(true) },
   ];
 
   return (
@@ -194,7 +248,7 @@ export default function NewInvoice() {
 
       {/* ────────── ChatGPT‑style Input Area ────────── */}
       <div className="bg-white border-t border-gray-200 px-4 sm:px-6 py-3">
-        {/* Toolbar: Upload Logo, QR, and Smart AI selector (also present in chat area) */}
+        {/* Toolbar: Upload Logo, QR */}
         <div className="flex items-center gap-2 mb-2">
           <label className="cursor-pointer text-xs px-3 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 font-medium transition flex items-center gap-1">
             🖼️ Logo
@@ -254,31 +308,24 @@ export default function NewInvoice() {
       <div className="fixed bottom-20 right-4 z-40">
         <button
           onClick={() => setShowQuickActions(!showQuickActions)}
-          className="h-14 w-14 rounded-full bg-gray-900 text-white shadow-2xl flex items-center justify-center hover:scale-105 transition"
+          className="h-14 w-14 rounded-full bg-gradient-to-br from-indigo-600 to-blue-600 text-white shadow-2xl flex items-center justify-center hover:scale-105 transition-all duration-200"
         >
-          <span className="text-2xl">+</span>
+          <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+          </svg>
         </button>
 
         {showQuickActions && (
-          <div className="absolute bottom-16 right-0 bg-white rounded-2xl shadow-2xl border border-gray-100 p-2 w-56 animate-fade-in">
+          <div className="absolute bottom-16 right-0 bg-white rounded-2xl shadow-2xl border border-gray-100 p-2 w-64 animate-fade-in">
             {quickActions.map((action, idx) => (
-              action.href ? (
-                <a
-                  key={idx}
-                  href={action.href}
-                  className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition"
-                >
-                  <span className="text-lg">{action.icon}</span> {action.label}
-                </a>
-              ) : (
-                <button
-                  key={idx}
-                  onClick={action.action}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition"
-                >
-                  <span className="text-lg">{action.icon}</span> {action.label}
-                </button>
-              )
+              <button
+                key={idx}
+                onClick={() => { action.action(); setShowQuickActions(false); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition"
+              >
+                <span className="text-gray-400 group-hover:text-indigo-600 transition">{action.icon}</span>
+                <span className="font-medium">{action.label}</span>
+              </button>
             ))}
           </div>
         )}
@@ -302,36 +349,6 @@ export default function NewInvoice() {
           </div>
         </div>
       )}
-
-      {/* Hidden file inputs for Quick Actions */}
-      <input
-        id="logoUploadHidden"
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={(e) => {
-          const file = e.target.files?.[0];
-          if (file) {
-            const reader = new FileReader();
-            reader.onload = (ev) => updateField("business_logo_url", ev.target?.result as string);
-            reader.readAsDataURL(file);
-          }
-        }}
-      />
-      <input
-        id="qrUploadHidden"
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={(e) => {
-          const file = e.target.files?.[0];
-          if (file) {
-            const reader = new FileReader();
-            reader.onload = (ev) => updateField("qr_code_data", ev.target?.result as string);
-            reader.readAsDataURL(file);
-          }
-        }}
-      />
     </div>
   );
 }
