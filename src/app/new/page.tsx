@@ -34,6 +34,11 @@ const icons = {
       <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
     </svg>
   ),
+  smartOn: (
+    <svg className="h-5 w-5 text-emerald-500" fill="currentColor" viewBox="0 0 24 24">
+      <path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
+    </svg>
+  ),
   templates: (
     <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -139,6 +144,7 @@ export default function NewInvoice() {
   const [showQuickActions, setShowQuickActions] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
+  const [thinking, setThinking] = useState(false);
 
   const [invoiceData, setInvoiceData] = useState<InvoiceData>({
     invoice_id: "",
@@ -182,10 +188,10 @@ export default function NewInvoice() {
     setInvoiceData(prev => ({ ...prev, subtotal, total }));
   }, [invoiceData.items, invoiceData.tax_percentage, invoiceData.discount]);
 
-  /* ──────────── Auto‑scroll Chat (always to bottom) ──────────── */
+  /* ──────────── Auto‑scroll Chat ──────────── */
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "auto" });
-  }, [messages]);
+  }, [messages, thinking]);
 
   /* ──────────── Send Message ──────────── */
   const handleSend = async () => {
@@ -194,6 +200,7 @@ export default function NewInvoice() {
     const newMessages = [...messages, { sender: "user", text }];
     setMessages(newMessages);
     setInput("");
+    setThinking(true);
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
@@ -214,6 +221,8 @@ export default function NewInvoice() {
       }
     } catch (err) {
       setMessages([...newMessages, { sender: "ai", text: "Network error." }]);
+    } finally {
+      setThinking(false);
     }
   };
 
@@ -228,7 +237,7 @@ export default function NewInvoice() {
     else alert("Failed to save.");
   };
 
-  /* ──────────── Field / Item Helpers ──────────── */
+  /* ──────────── Field Helper ──────────── */
   const updateField = (field: keyof InvoiceData, value: any) => {
     setInvoiceData(prev => ({ ...prev, [field]: value }));
   };
@@ -239,7 +248,7 @@ export default function NewInvoice() {
     { label: "Invoice History", icon: icons.history, action: () => { window.location.href = "/dashboard"; } },
     { label: "Upload Logo", icon: icons.logo, action: () => document.getElementById("logoUpload")?.click() },
     { label: "QR Code", icon: icons.qr, action: () => document.getElementById("qrUpload")?.click() },
-    { label: "Smart AI", icon: icons.smart, action: () => setUseSmartAI(!useSmartAI) },
+    { label: useSmartAI ? "✨ Smart AI (On)" : "💡 Smart AI (Off)", icon: useSmartAI ? icons.smartOn : icons.smart, action: () => setUseSmartAI(!useSmartAI) },
     { label: "Templates", icon: icons.templates, action: () => setShowTemplates(true) },
     { label: "Export PDF", icon: icons.export, action: () => { if (isComplete) handleFinalize(); else alert("Please complete the invoice before exporting."); } },
     { label: "Clients", icon: icons.clients, action: () => alert("Client database coming soon! You'll be able to save and reuse client information.") },
@@ -290,11 +299,35 @@ export default function NewInvoice() {
             </div>
           </div>
         ))}
+        {/* Thinking indicator */}
+        {thinking && (
+          <div className="flex justify-start animate-fade-in">
+            <div className="bg-white text-gray-400 text-sm px-4 py-3 rounded-2xl rounded-bl-md border border-gray-100 shadow-sm flex items-center gap-2">
+              <span className="flex gap-1">
+                <span className="h-2 w-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></span>
+                <span className="h-2 w-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></span>
+                <span className="h-2 w-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></span>
+              </span>
+              <span className="ml-2">AI is thinking…</span>
+            </div>
+          </div>
+        )}
         <div ref={chatEndRef} />
       </div>
 
-      {/* ────────── ChatGPT‑style Input Area ────────── */}
+      {/* ────────── Input Area ────────── */}
       <div className="bg-white border-t border-gray-200 px-4 sm:px-6 py-3">
+        {/* Smart AI badge – appears right above input when Smart AI is ON */}
+        {useSmartAI && (
+          <div className="flex items-center justify-center mb-2">
+            <span className="inline-flex items-center gap-1.5 bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-xs font-medium shadow-sm">
+              <svg className="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" /></svg>
+              Smart AI is active
+            </span>
+          </div>
+        )}
+
+        {/* Message Input */}
         <div className="flex items-center gap-2">
           <input
             value={input}
@@ -302,10 +335,12 @@ export default function NewInvoice() {
             onKeyDown={e => e.key === "Enter" && handleSend()}
             placeholder="Type your message..."
             className="flex-1 h-12 px-4 rounded-xl border border-gray-200 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm transition"
+            disabled={thinking}
           />
           <button
             onClick={handleSend}
-            className="h-12 w-12 rounded-xl bg-gray-900 text-white flex items-center justify-center shadow-lg hover:bg-gray-800 active:scale-95 transition"
+            disabled={thinking}
+            className="h-12 w-12 rounded-xl bg-gray-900 text-white flex items-center justify-center shadow-lg hover:bg-gray-800 active:scale-95 transition disabled:opacity-50"
           >
             ➤
           </button>
