@@ -23,12 +23,6 @@ export default function LandingPage() {
             <Link href="/dashboard" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition hidden sm:block">
               Dashboard
             </Link>
-            <button
-              onClick={() => setShowSupport(true)}
-              className="hidden sm:inline-flex items-center gap-1 text-sm font-medium text-gray-600 hover:text-gray-900 transition"
-            >
-              ☕ Support us
-            </button>
             <Link
               href="/new"
               className="inline-flex items-center gap-1.5 sm:gap-2 bg-gray-900 hover:bg-gray-800 text-white px-4 sm:px-5 py-2.5 rounded-xl font-semibold shadow-lg transition-all hover:scale-105 text-xs sm:text-base"
@@ -40,7 +34,7 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      {/* ---- Support Modal (unchanged) ---- */}
+      {/* ---- Support Modal (still works from footer) ---- */}
       {showSupport && (
         <div
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
@@ -174,7 +168,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ---- Short origin (no long story) ---- */}
+      {/* ---- Short origin ---- */}
       <section className="py-20 sm:py-24 bg-gray-900 text-white">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
           <h2 className="text-3xl sm:text-4xl font-bold mb-6">Created out of real necessity</h2>
