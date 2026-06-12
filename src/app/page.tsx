@@ -10,6 +10,7 @@ export default function LandingPage() {
       {/* ---- Navigation ---- */}
       <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-100 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+          {/* Logo & Brand – no overlapping */}
           <Link href="/" className="flex items-center gap-2.5 shrink-0">
             <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-xl overflow-hidden ring-2 ring-indigo-400/50 shadow-md bg-white p-0.5 flex-shrink-0">
               <img
@@ -22,8 +23,13 @@ export default function LandingPage() {
               Zuniq Invoices
             </span>
           </Link>
+
+          {/* Right side buttons – stackable on tiny screens */}
           <div className="flex items-center gap-3 sm:gap-5">
-            <Link href="/dashboard" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition hidden sm:block">
+            <Link
+              href="/dashboard"
+              className="text-sm font-medium text-gray-600 hover:text-gray-900 transition hidden sm:block"
+            >
               My Invoices
             </Link>
             <button
@@ -34,7 +40,7 @@ export default function LandingPage() {
             </button>
             <Link
               href="/new"
-              className="inline-flex items-center gap-1.5 sm:gap-2 bg-gray-900 hover:bg-gray-800 text-white px-4 sm:px-5 py-2.5 rounded-xl font-semibold shadow-lg transition-all hover:scale-105 text-sm sm:text-base"
+              className="inline-flex items-center gap-1.5 sm:gap-2 bg-gray-900 hover:bg-gray-800 text-white px-3 sm:px-5 py-2.5 rounded-xl font-semibold shadow-lg transition-all hover:scale-105 text-xs sm:text-base"
             >
               <span className="text-lg">⚡</span>
               <span className="whitespace-nowrap">Create Free Invoice</span>
@@ -97,16 +103,17 @@ export default function LandingPage() {
             The AI‑powered invoice generator that replaces boring forms with a smart conversational assistant.
             Chat with our AI, answer a few questions, and get a professional invoice instantly — for free, forever.
           </p>
+          {/* Hero buttons – smaller on mobile */}
           <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in-up">
             <Link
               href="/new"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-gray-900 hover:bg-gray-800 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-2xl hover:shadow-3xl transition-all hover:scale-105"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-gray-900 hover:bg-gray-800 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-2xl font-bold text-base sm:text-lg shadow-2xl hover:shadow-3xl transition-all hover:scale-105"
             >
               <span className="text-2xl">⚡</span> Create Your First Invoice
             </Link>
             <a
               href="#how-it-works"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white border-2 border-gray-200 hover:border-gray-300 text-gray-700 px-8 py-4 rounded-2xl font-semibold text-lg shadow-sm transition-all"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white border-2 border-gray-200 hover:border-gray-300 text-gray-700 px-6 sm:px-8 py-3 sm:py-4 rounded-2xl font-semibold text-base sm:text-lg shadow-sm transition-all"
             >
               <span>🎥</span> See how it works
             </a>
