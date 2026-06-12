@@ -22,7 +22,7 @@ export interface InvoiceData {
   notes: string;
 }
 
-// ---------- Rule‑Based AI (with basic common sense) ----------
+// ─── Rule‑Based AI (with intelligent phrase extraction) ───
 const fieldOrder: { key: keyof InvoiceData; question: string; hint: string; sensible?: boolean }[] = [
   { key: "business_name", question: "What is your business name?", hint: "Your company or personal name.", sensible: true },
   { key: "business_email", question: "What's your business email?", hint: "e.g. hello@example.com" },
@@ -42,17 +42,14 @@ const fieldOrder: { key: keyof InvoiceData; question: string; hint: string; sens
   { key: "notes", question: "Any payment instructions or additional notes?", hint: "e.g. 'Credit, payment due within 30 days'" },
 ];
 
-// Simple list of obviously fake names
 const invalidNames = ["no name", "nothing", "none", "asdf", "xyz", "test", "unknown", "n/a", "na"];
 
 function isSensibleAnswer(key: string, answer: string): boolean {
   if (key === "business_name" || key === "client_name") {
     const lower = answer.trim().toLowerCase();
     if (lower.length < 2 || invalidNames.includes(lower)) return false;
-    // Reject if it looks like a single random character
     if (/^[a-z0-9]{1}$/.test(lower)) return false;
   }
-  // For email fields, a very basic sanity check
   if (key === "business_email" || key === "client_email") {
     const trimmed = answer.trim();
     if (!trimmed.includes("@") || !trimmed.includes(".")) return false;
@@ -78,7 +75,25 @@ function getNextMissing(data: InvoiceData): number {
 
 function applyAnswer(data: InvoiceData, fieldIndex: number, answer: string) {
   const key = fieldOrder[fieldIndex].key;
-  const trimmed = answer.trim();
+  let trimmed = answer.trim();
+
+  // ---- Intelligent extraction for common phrases ----
+  const phrasePatterns = [
+    /(?:my |the )?business name (?:is|:)\s+(.+)/i,
+    /(?:my |the )?client name (?:is|:)\s+(.+)/i,
+    /(?:my |the )?email (?:is|:)\s+(.+)/i,
+    /(?:my |the )?phone (?:number\s*)?(?:is|:)\s+(.+)/i,
+    /(?:my |the )?address (?:is|:)\s+(.+)/i,
+    /(?:my |the )?trn (?:is|:)\s+(.+)/i,
+  ];
+  for (const pattern of phrasePatterns) {
+    const match = trimmed.match(pattern);
+    if (match) {
+      trimmed = match[1].trim();
+      break;
+    }
+  }
+
   if (key === "items") {
     const parts = trimmed.match(/^(.+?)\s+(\d+(?:\.\d+)?)\s*$/);
     if (parts) {
@@ -96,20 +111,11 @@ function applyAnswer(data: InvoiceData, fieldIndex: number, answer: string) {
   }
 }
 
-export function processChat(
-  msg: string,
-  currentData: InvoiceData,
-  history: string[],
-  useGemini: boolean = false
-): { reply: string; updatedData: InvoiceData } {
-  // Gemini path handled externally via useGemini flag, but here we only implement rule‑based.
-  // (The chat route will call the Gemini function separately if useGemini is true – we keep that logic in the route.)
-  // For now, we just implement the rule‑based part. The dual AI logic is in the chat route.
+function ruleBasedChat(msg: string, currentData: InvoiceData): { reply: string; updatedData: InvoiceData } {
   const data = { ...currentData, items: currentData.items.map((i) => ({ ...i })) };
   const t = msg.trim();
   const lower = t.toLowerCase();
 
-  // Greetings
   if (["hello", "hi", "hey", "good morning"].some(g => lower.includes(g))) {
     const nextIdx = getNextMissing(data);
     return {
@@ -117,11 +123,9 @@ export function processChat(
       updatedData: data,
     };
   }
-  // Thanks
   if (["thanks", "thank you", "thx"].some(g => lower.includes(g))) {
     return { reply: "You're welcome! 😊", updatedData: data };
   }
-  // Help
   if (["help", "not sure", "idk"].some(g => lower.includes(g))) {
     const nextIdx = getNextMissing(data);
     if (nextIdx === -1) return { reply: "All set!", updatedData: data };
@@ -137,7 +141,7 @@ export function processChat(
     return { reply: "All information collected! You can review and finalize.", updatedData: data };
   }
 
-  // Check if the answer is sensible for this field
+  // Check sensible answer
   const fieldKey = fieldOrder[missingIdx].key;
   if (fieldOrder[missingIdx].sensible && !isSensibleAnswer(fieldKey, t)) {
     return {
@@ -155,4 +159,52 @@ export function processChat(
   const nextIdx = getNextMissing(data);
   if (nextIdx === -1) return { reply: "All information collected! You can review and finalize.", updatedData: data };
   return { reply: fieldOrder[nextIdx].question, updatedData: data };
+}
+
+// ─── Gemini AI (with reliable model) ───
+const GEMINI_API_URL =
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-001:generateContent";
+
+async function geminiChat(msg: string, currentData: InvoiceData, history: string[]): Promise<{ reply: string; updatedData: InvoiceData }> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error("GEMINI_API_KEY not set");
+
+  const prev = history.map((m, i) => `[${i % 2 === 0 ? "AI" : "User"}]: ${m}`).join("\n");
+  const prompt = `You are an invoice assistant. Current data: ${JSON.stringify(currentData)}. Conversation: ${prev}. User: ${msg}. Output ONLY: {"reply":"...", "updatedData": {...}}`;
+
+  const res = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.3, maxOutputTokens: 1500 },
+    }),
+  });
+
+  if (!res.ok) throw new Error("Gemini API failed");
+  const json = await res.json();
+  const text = json.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!text) throw new Error("No response");
+  const match = text.match(/\{[\s\S]*\}/);
+  if (!match) throw new Error("Invalid JSON");
+  const parsed = JSON.parse(match[0]);
+  const updated = { ...currentData, ...parsed.updatedData };
+  return { reply: parsed.reply, updatedData: updated };
+}
+
+// ─── Main Export ───
+export async function processChat(
+  msg: string,
+  currentData: InvoiceData,
+  history: string[],
+  useGemini: boolean = false
+): Promise<{ reply: string; updatedData: InvoiceData }> {
+  if (useGemini) {
+    try {
+      return await geminiChat(msg, currentData, history);
+    } catch (e) {
+      console.error("Gemini failed, falling back to rule-based AI", e);
+    }
+  }
+  return ruleBasedChat(msg, currentData);
 }
