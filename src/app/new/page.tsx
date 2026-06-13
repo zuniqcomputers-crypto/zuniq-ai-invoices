@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect } from "react";
 import InvoicePreview from "@/components/InvoicePreview";
 import { InvoiceData } from "@/utils/ai";
+import Link from "next/link";
 
 /* ────────── Professional SVG Icons ────────── */
 const icons = {
