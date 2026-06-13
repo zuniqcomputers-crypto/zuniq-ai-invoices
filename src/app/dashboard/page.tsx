@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 
 export default function Dashboard() {
-  const [invoices, setInvoices] = useState([]);
+  const [invoices, setInvoices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchInvoices = () => {
@@ -22,9 +22,7 @@ export default function Dashboard() {
   };
 
   const handleDuplicate = async (inv: any) => {
-    const newInvoice = { ...inv, invoice_id: "", _id: undefined, createdAt: undefined };
-    newInvoice.issue_date = new Date().toISOString().split("T")[0];
-    newInvoice.due_date = "";
+    const newInvoice = { ...inv, invoice_id: "", _id: undefined, createdAt: undefined, issue_date: new Date().toISOString().split("T")[0], due_date: "", status: "draft" };
     const res = await fetch("/api/invoice/create", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -38,20 +36,17 @@ export default function Dashboard() {
     }
   };
 
-  // Analytics
   const stats = {
     total: invoices.length,
     paid: invoices.filter((i: any) => i.status === "paid").length,
     unpaid: invoices.filter((i: any) => i.status === "unpaid" || i.status === "draft").length,
     revenue: invoices.filter((i: any) => i.status === "paid").reduce((sum: number, i: any) => sum + (i.total || 0), 0),
-    overdue: invoices.filter((i: any) => {
-      if (!i.due_date || i.status === "paid") return false;
-      return new Date(i.due_date) < new Date();
-    }).length,
+    overdue: invoices.filter((i: any) => i.due_date && i.status !== "paid" && new Date(i.due_date) < new Date()).length,
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Header */}
       <header className="bg-white/90 backdrop-blur-md border-b border-gray-200 px-4 sm:px-6 py-3 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-2.5">
           <div className="h-8 w-8 rounded-lg overflow-hidden ring-2 ring-indigo-400/30">
@@ -83,19 +78,16 @@ export default function Dashboard() {
 
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-40 bg-white rounded-2xl animate-pulse shadow-sm" />
-            ))}
+            {[1, 2, 3].map((i) => <div key={i} className="h-40 bg-white rounded-2xl animate-pulse shadow-sm" />)}
           </div>
         ) : invoices.length === 0 ? (
-          <div className="text-center py-20">
+          <div className="text-center py-20 bg-white rounded-3xl shadow-sm border border-gray-100">
             <div className="text-7xl mb-4">📭</div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">No invoices yet</h2>
-            <p className="text-gray-500 mb-6">Your first invoice is just a chat away.</p>
-            <Link
-              href="/new"
-              className="inline-flex items-center gap-2 bg-gray-900 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:bg-gray-800 transition"
-            >
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome to Zuniq Invoices!</h2>
+            <p className="text-gray-500 mb-8 max-w-md mx-auto">
+              Your invoices will appear here. Start by creating your first invoice – it takes less than 30 seconds.
+            </p>
+            <Link href="/new" className="inline-flex items-center gap-2 bg-gray-900 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:bg-gray-800 transition">
               <span className="text-lg">+</span> Create your first invoice
             </Link>
           </div>
@@ -105,17 +97,17 @@ export default function Dashboard() {
               <div key={inv.invoice_id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 hover:shadow-xl transition-shadow duration-300">
                 <div className="flex justify-between items-start mb-3">
                   <span className="font-mono text-xs text-gray-400">{inv.invoice_id}</span>
-                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
-                    inv.status === "paid" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
-                  }`}>{inv.status}</span>
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${inv.status === "paid" ? "bg-emerald-100 text-emerald-700" : inv.status === "overdue" ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"}`}>
+                    {inv.status || "unpaid"}
+                  </span>
                 </div>
                 <h3 className="font-semibold text-gray-900 text-lg mb-1">{inv.client_name || "Unknown Client"}</h3>
                 <p className="text-3xl font-bold text-gray-900 mb-4">{inv.currency} {inv.total.toFixed(2)}</p>
-                <div className="flex gap-2">
-                  <Link href={`/view/${inv.invoice_id}`} className="flex-1 text-center py-2 rounded-lg bg-gray-100 text-gray-700 font-medium text-sm hover:bg-gray-200 transition">👁️ View</Link>
-                  <Link href={`/edit/${inv.invoice_id}`} className="flex-1 text-center py-2 rounded-lg bg-gray-100 text-gray-700 font-medium text-sm hover:bg-gray-200 transition">✏️ Edit</Link>
-                  <a href={`/api/invoice/${inv.invoice_id}/pdf`} className="flex-1 text-center py-2 rounded-lg bg-indigo-50 text-indigo-700 font-medium text-sm hover:bg-indigo-100 transition" download>📥 PDF</a>
-                  <button onClick={() => handleDuplicate(inv)} className="flex-1 text-center py-2 rounded-lg bg-blue-50 text-blue-700 font-medium text-sm hover:bg-blue-100 transition">📋 Dup</button>
+                <div className="flex gap-2 flex-wrap">
+                  <Link href={`/view/${inv.invoice_id}`} className="flex-1 text-center py-2 rounded-lg bg-gray-100 text-gray-700 font-medium text-sm hover:bg-gray-200 transition">👁️</Link>
+                  <Link href={`/edit/${inv.invoice_id}`} className="flex-1 text-center py-2 rounded-lg bg-gray-100 text-gray-700 font-medium text-sm hover:bg-gray-200 transition">✏️</Link>
+                  <a href={`/api/invoice/${inv.invoice_id}/pdf`} className="flex-1 text-center py-2 rounded-lg bg-indigo-50 text-indigo-700 font-medium text-sm hover:bg-indigo-100 transition" download>📥</a>
+                  <button onClick={() => handleDuplicate(inv)} className="flex-1 text-center py-2 rounded-lg bg-blue-50 text-blue-700 font-medium text-sm hover:bg-blue-100 transition">📋</button>
                   <button onClick={() => handleDelete(inv.invoice_id)} className="flex-1 py-2 rounded-lg bg-red-50 text-red-600 font-medium text-sm hover:bg-red-100 transition">🗑</button>
                 </div>
               </div>
