@@ -49,8 +49,8 @@ export default function Dashboard() {
       {/* Header */}
       <header className="bg-white/90 backdrop-blur-md border-b border-gray-200 px-4 sm:px-6 py-3 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-2.5">
-          <div className="h-8 w-8 rounded-lg overflow-hidden ring-2 ring-indigo-400/30">
-            <img src="/logo.png" alt="Logo" className="h-full w-full object-cover" />
+          <div className="h-8 w-8 rounded-lg overflow-hidden bg-white flex items-center justify-center p-1">
+            <img src="/logo.png" alt="Logo" className="h-full w-full object-contain" />
           </div>
           <h1 className="text-lg font-semibold text-gray-800">Dashboard</h1>
         </div>
@@ -83,13 +83,12 @@ export default function Dashboard() {
         ) : invoices.length === 0 ? (
           <div className="text-center py-20 bg-white rounded-3xl shadow-sm border border-gray-100">
             <div className="text-7xl mb-4">📭</div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome to Zuniq Invoices!</h2>
-            <p className="text-gray-500 mb-8 max-w-md mx-auto">
-              Your invoices will appear here. Start by creating your first invoice – it takes less than 30 seconds.
-            </p>
-            <Link href="/new" className="inline-flex items-center gap-2 bg-gray-900 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:bg-gray-800 transition">
-              <span className="text-lg">+</span> Create your first invoice
-            </Link>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Ready to streamline your billing?</h2>
+            <p className="text-gray-500 mb-8 max-w-md mx-auto">Create your first invoice in under 30 seconds. Zuniq remembers your clients, items, and settings for next time.</p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Link href="/new" className="inline-flex items-center gap-2 bg-gray-900 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:bg-gray-800 transition">+ New Invoice</Link>
+              <button className="inline-flex items-center gap-2 bg-indigo-100 text-indigo-700 px-6 py-3 rounded-xl font-semibold hover:bg-indigo-200 transition" onClick={() => alert("Try saying: 'Create an invoice for Ali, 3 design pages, due in 7 days'")}>💡 Example prompt</button>
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
