@@ -5,6 +5,8 @@ import Link from "next/link";
 export default function Dashboard() {
   const [invoices, setInvoices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [emailModal, setEmailModal] = useState<{ id: string; client_email?: string } | null>(null);
+  const [emailSending, setEmailSending] = useState(false);
 
   const fetchInvoices = () => {
     fetch("/api/invoices")
@@ -33,6 +35,32 @@ export default function Dashboard() {
       alert("Invoice duplicated! Edit the new draft.");
     } else {
       alert("Failed to duplicate.");
+    }
+  };
+
+  const handleSendEmail = async () => {
+    if (!emailModal) return;
+    const clientEmail = prompt("Client email address:", emailModal.client_email || "");
+    if (!clientEmail) return;
+    const message = prompt("Add a message (optional):", `Please find invoice ${emailModal.id} attached.`);
+    setEmailSending(true);
+    try {
+      const res = await fetch("/api/send-invoice", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ invoiceId: emailModal.id, clientEmail, message }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert("Invoice sent successfully!");
+        setEmailModal(null);
+      } else {
+        alert("Failed to send: " + (data.error || "Unknown error"));
+      }
+    } catch (err) {
+      alert("Network error");
+    } finally {
+      setEmailSending(false);
     }
   };
 
@@ -83,12 +111,11 @@ export default function Dashboard() {
         ) : invoices.length === 0 ? (
           <div className="text-center py-20 bg-white rounded-3xl shadow-sm border border-gray-100">
             <div className="text-7xl mb-4">📭</div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Ready to streamline your billing?</h2>
-            <p className="text-gray-500 mb-8 max-w-md mx-auto">Create your first invoice in under 30 seconds. Zuniq remembers your clients, items, and settings for next time.</p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Link href="/new" className="inline-flex items-center gap-2 bg-gray-900 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:bg-gray-800 transition">+ New Invoice</Link>
-              <button className="inline-flex items-center gap-2 bg-indigo-100 text-indigo-700 px-6 py-3 rounded-xl font-semibold hover:bg-indigo-200 transition" onClick={() => alert("Try saying: 'Create an invoice for Ali, 3 design pages, due in 7 days'")}>💡 Example prompt</button>
-            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome to Zuniq Invoices!</h2>
+            <p className="text-gray-500 mb-8 max-w-md mx-auto">Your invoices will appear here. Start by creating your first invoice – it takes less than 30 seconds.</p>
+            <Link href="/new" className="inline-flex items-center gap-2 bg-gray-900 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:bg-gray-800 transition">
+              <span className="text-lg">+</span> Create your first invoice
+            </Link>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -107,6 +134,7 @@ export default function Dashboard() {
                   <Link href={`/edit/${inv.invoice_id}`} className="flex-1 text-center py-2 rounded-lg bg-gray-100 text-gray-700 font-medium text-sm hover:bg-gray-200 transition">✏️</Link>
                   <a href={`/api/invoice/${inv.invoice_id}/pdf`} className="flex-1 text-center py-2 rounded-lg bg-indigo-50 text-indigo-700 font-medium text-sm hover:bg-indigo-100 transition" download>📥</a>
                   <button onClick={() => handleDuplicate(inv)} className="flex-1 text-center py-2 rounded-lg bg-blue-50 text-blue-700 font-medium text-sm hover:bg-blue-100 transition">📋</button>
+                  <button onClick={() => setEmailModal({ id: inv.invoice_id, client_email: inv.client_email })} className="flex-1 text-center py-2 rounded-lg bg-emerald-50 text-emerald-700 font-medium text-sm hover:bg-emerald-100 transition">✉️</button>
                   <button onClick={() => handleDelete(inv.invoice_id)} className="flex-1 py-2 rounded-lg bg-red-50 text-red-600 font-medium text-sm hover:bg-red-100 transition">🗑</button>
                 </div>
               </div>
@@ -114,6 +142,17 @@ export default function Dashboard() {
           </div>
         )}
       </div>
+
+      {/* Email modal */}
+      {emailModal && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setEmailModal(null)}>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6" onClick={e => e.stopPropagation()}>
+            <h2 className="text-xl font-bold mb-4">✉️ Send Invoice</h2>
+            <p className="text-sm text-gray-600 mb-6">Invoice <strong>{emailModal.id}</strong> will be sent to <strong>{emailModal.client_email || "the client"}</strong>.</p>
+            <button onClick={handleSendEmail} disabled={emailSending} className="w-full py-3 bg-gray-900 text-white rounded-xl font-semibold hover:bg-gray-800 transition disabled:opacity-50">{emailSending ? "Sending…" : "Send Now"}</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
