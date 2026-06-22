@@ -6,8 +6,8 @@ export default function LandingPage() {
   const [showSupport, setShowSupport] = useState(false);
 
   return (
-    <div className="bg-slate-900 text-slate-100 selection:bg-indigo-500/30">
-      {/* ---- Nav ---- */}
+    <div className="bg-slate-900 text-slate-100 selection:bg-indigo-500/30 font-sans">
+      {/* ---- Nav (slim, premium) ---- */}
       <nav className="sticky top-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5 shrink-0">
@@ -30,13 +30,26 @@ export default function LandingPage() {
         </div>
       </nav>
 
+      {/* ---- Support Modal (unchanged) ---- */}
+      {showSupport && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setShowSupport(false)}>
+          <div className="bg-slate-800 rounded-3xl shadow-2xl max-w-md w-full p-6 sm:p-8 animate-fade-in-up" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-start mb-4">
+              <h2 className="text-2xl font-bold text-white">☕ Support us</h2>
+              <button onClick={() => setShowSupport(false)} className="text-slate-400 hover:text-white text-3xl leading-none">&times;</button>
+            </div>
+            <p className="text-slate-300 mb-6">Zuniq Invoices is free and open. If it helps your business, consider supporting its development.</p>
+            <a href="https://ko-fi.com/zuniqinvoices" target="_blank" rel="noopener noreferrer" className="block w-full text-center py-4 bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-300 hover:to-orange-300 text-gray-900 rounded-2xl font-bold text-lg shadow-xl transition-all hover:scale-105">☕️ Support on Ko‑fi</a>
+            <p className="mt-4 text-xs text-slate-400 text-center">Secure donation via Ko‑fi. No account required.</p>
+          </div>
+        </div>
+      )}
+
       {/* ---- Hero ---- */}
       <section className="relative overflow-hidden pt-16 sm:pt-24 pb-16 sm:pb-24 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
           <div className="relative z-10">
-            <p className="text-indigo-400 text-sm font-medium mb-4 animate-fade-in-up">
-              ⭐ Trusted by freelancers and agencies
-            </p>
+            <p className="text-indigo-400 text-sm font-medium mb-4 animate-fade-in-up">⭐ Trusted by freelancers, agencies, and small businesses</p>
             <h1 className="text-4xl sm:text-6xl font-extrabold text-white tracking-tight leading-tight">
               AI invoices done for you.
             </h1>
@@ -44,29 +57,24 @@ export default function LandingPage() {
               Chat with our AI, answer a few questions, and get a polished invoice instantly — free forever.
             </p>
             <div className="mt-10 flex flex-col sm:flex-row gap-4">
-              <Link
-                href="/new"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-3.5 rounded-xl font-bold text-base shadow-xl transition-all hover:scale-105"
-              >
+              <Link href="/new" className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-3.5 rounded-xl font-bold text-base shadow-xl transition-all hover:scale-105">
                 Start invoicing for free
               </Link>
-              <a
-                href="#product-preview"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white px-8 py-3.5 rounded-xl font-semibold text-base transition-all"
-              >
+              <a href="#product-preview" className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white px-8 py-3.5 rounded-xl font-semibold text-base transition-all">
                 See the product
               </a>
             </div>
             <p className="mt-4 text-xs text-slate-500">No credit card · Unlimited invoices · Cancel anytime</p>
           </div>
 
-          {/* Hero product preview – realistic dashboard mockup */}
+          {/* Hero product preview (realistic dashboard mockup) */}
           <div className="relative flex justify-center lg:justify-end">
             <div className="relative w-full max-w-md">
               <div className="absolute -top-12 -left-8 bg-slate-800 rounded-2xl shadow-xl p-4 z-20 max-w-[200px] animate-float">
                 <p className="text-sm text-slate-300">💬 Invoice for Ali, 3 design pages, due in 7 days</p>
               </div>
               <div className="absolute -top-6 right-0 bg-indigo-600 text-white rounded-full px-3 py-1 text-xs font-medium shadow-lg animate-fade-in-up" style={{ animationDelay: '0.2s' }}>✨ AI Processing</div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2 bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 p-5 transform rotate-[-1deg] hover:rotate-0 transition-all duration-500 animate-float">
                   <div className="flex justify-between items-center mb-4">
@@ -85,10 +93,7 @@ export default function LandingPage() {
                   <table className="w-full text-sm mb-4">
                     <thead>
                       <tr className="border-b border-slate-700 text-slate-400 text-xs uppercase tracking-wider">
-                        <th className="py-2 text-left">Description</th>
-                        <th className="py-2 text-center">Qty</th>
-                        <th className="py-2 text-right">Price</th>
-                        <th className="py-2 text-right">Amount</th>
+                        <th className="py-2 text-left">Description</th><th className="py-2 text-center">Qty</th><th className="py-2 text-right">Price</th><th className="py-2 text-right">Amount</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -118,7 +123,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ---- Features (compact cards) ---- */}
+      {/* ---- Features (compact) ---- */}
       <section className="py-16 sm:py-20 max-w-7xl mx-auto px-4 sm:px-6">
         <div className="grid sm:grid-cols-3 gap-6">
           {[
