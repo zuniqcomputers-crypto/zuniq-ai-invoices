@@ -2,9 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 
-/* ────────────────────────────
-   Icons – tiny, line‑style, premium
-   ──────────────────────────── */
+/* ────────── Icons (tiny functions) ────────── */
 const Icon = {
   sparkle: () => (
     <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -54,11 +52,8 @@ const Icon = {
   ),
 };
 
-/* ────────────────────────────
-   Reusable Components
-   ──────────────────────────── */
+/* ────────── Reusable Components ────────── */
 
-/** Trust badge with check icon */
 function TrustBadge({ text }: { text: string }) {
   return (
     <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-400">
@@ -67,7 +62,6 @@ function TrustBadge({ text }: { text: string }) {
   );
 }
 
-/** Feature Card */
 function FeatureCard({ icon: IconComp, title, desc }: { icon: React.ComponentType; title: string; desc: string }) {
   return (
     <div className="group bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6 hover:border-indigo-500/50 hover:bg-slate-800/70 transition-all duration-300 hover:shadow-[0_0_30px_rgba(99,102,241,0.15)]">
@@ -80,7 +74,6 @@ function FeatureCard({ icon: IconComp, title, desc }: { icon: React.ComponentTyp
   );
 }
 
-/** Testimonial Card */
 function TestimonialCard({ avatar, name, title, company, text }: { avatar: string; name: string; title: string; company: string; text: string }) {
   return (
     <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6 flex flex-col gap-4">
@@ -103,12 +96,14 @@ function TestimonialCard({ avatar, name, title, company, text }: { avatar: strin
   );
 }
 
-/** Template Card – shows a small invoice preview */
-function TemplateCard({ name, style }: { name: string; style: string }) {
+function TemplateCard({ name, style, onClick }: { name: string; style: string; onClick: () => void }) {
   return (
-    <div className="bg-slate-800 rounded-2xl border border-slate-700 p-4 hover:border-indigo-500/50 hover:shadow-[0_0_20px_rgba(99,102,241,0.2)] transition-all duration-300 text-center cursor-pointer">
+    <div
+      onClick={onClick}
+      className="bg-slate-800 rounded-2xl border border-slate-700 p-4 hover:border-indigo-500/50 hover:shadow-[0_0_20px_rgba(99,102,241,0.2)] transition-all duration-300 text-center cursor-pointer"
+    >
       <div className="h-32 bg-slate-700 rounded-lg mb-3 flex items-center justify-center text-slate-500 text-sm">
-        {/* Simple fake invoice preview */}
+        {/* Fake invoice preview */}
         <div className="w-full h-full p-3 flex flex-col gap-2">
           <div className="h-2 w-3/4 bg-slate-600 rounded" />
           <div className="h-2 w-1/2 bg-slate-600 rounded" />
@@ -131,7 +126,6 @@ function TemplateCard({ name, style }: { name: string; style: string }) {
 export default function LandingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [demoModal, setDemoModal] = useState(false);
-  const [templateModal, setTemplateModal] = useState<string | null>(null);
 
   const templates = [
     { name: "Modern", style: "Clean & contemporary" },
@@ -189,64 +183,47 @@ export default function LandingPage() {
 
   return (
     <div className="bg-slate-900 text-slate-100 selection:bg-indigo-500/30 font-sans overflow-x-hidden">
-
-      {/* ========== 1. NAVIGATION ========== */}
+      {/* ========== NAVIGATION ========== */}
       <nav className="sticky top-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
-          {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 shrink-0">
             <div className="h-8 w-8 rounded-lg bg-indigo-500/10 flex items-center justify-center p-1">
               <img src="/logo.png" alt="Zuniq Invoices Logo" className="h-full w-full object-contain" />
             </div>
             <span className="text-lg font-bold text-white">Zuniq Invoices</span>
           </Link>
-
-          {/* Center links – hidden on mobile */}
           <div className="hidden lg:flex items-center gap-6 text-sm font-medium text-slate-400">
             <a href="#features" className="hover:text-white transition">Features</a>
             <a href="#templates" className="hover:text-white transition">Templates</a>
             <a href="#faq" className="hover:text-white transition">FAQ</a>
-            <a href="#contact" className="hover:text-white transition">Contact</a>
           </div>
-
-          {/* Right actions */}
           <div className="flex items-center gap-3">
             <Link href="/dashboard" className="text-sm font-medium text-slate-400 hover:text-white transition hidden sm:block">
-              Login
+              Dashboard
             </Link>
-            <Link
-              href="/new"
-              className="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg font-semibold shadow-lg transition-all text-sm"
-            >
+            <Link href="/new" className="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg font-semibold shadow-lg transition-all text-sm">
               <Icon.bolt /> Start Free
             </Link>
           </div>
         </div>
       </nav>
 
-      {/* ========== 2. HERO SECTION ========== */}
+      {/* ========== HERO SECTION ========== */}
       <section className="relative overflow-hidden pt-16 sm:pt-24 pb-20 sm:pb-28 px-4 sm:px-6">
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-cyan-500/5 pointer-events-none" />
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
-          {/* Left text */}
           <div className="relative z-10">
             <h1 className="text-4xl sm:text-6xl font-extrabold text-white tracking-tight leading-tight">
-              Create Professional AI Invoices in Seconds
+              AI Invoices Done for You
             </h1>
             <p className="mt-6 text-base sm:text-lg text-slate-400 max-w-xl leading-relaxed">
-              Generate beautiful invoices instantly using AI. Export PDFs, manage clients, and get paid faster without wasting time.
+              Chat with our AI, answer a few questions, and get a polished invoice instantly — free forever.
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-4">
-              <Link
-                href="/new"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-3.5 rounded-xl font-bold text-base shadow-xl transition-all hover:scale-105"
-              >
+              <Link href="/new" className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-3.5 rounded-xl font-bold text-base shadow-xl transition-all hover:scale-105">
                 <Icon.bolt /> Start Creating Free
               </Link>
-              <button
-                onClick={() => setDemoModal(true)}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white px-8 py-3.5 rounded-xl font-semibold text-base transition-all"
-              >
+              <button onClick={() => setDemoModal(true)} className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white px-8 py-3.5 rounded-xl font-semibold text-base transition-all">
                 <Icon.eye /> See Live Demo
               </button>
             </div>
@@ -259,36 +236,24 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Right: Dashboard preview (floating cards) */}
+          {/* Dashboard preview (floating cards) */}
           <div className="relative flex justify-center lg:justify-end">
             <div className="relative w-full max-w-md">
               <div className="absolute -top-8 -left-6 bg-slate-800 rounded-2xl shadow-xl p-4 z-20 max-w-[180px] animate-float">
                 <p className="text-sm text-slate-300">💬 Invoice for Ali, 3 designs...</p>
               </div>
-              <div className="absolute -top-4 right-4 bg-indigo-600 text-white rounded-full px-3 py-1 text-xs font-medium shadow-lg animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-                ✨ AI Processing
-              </div>
-
+              <div className="absolute -top-4 right-4 bg-indigo-600 text-white rounded-full px-3 py-1 text-xs font-medium shadow-lg animate-fade-in-up" style={{ animationDelay: '0.2s' }}>✨ AI Processing</div>
               <div className="bg-slate-800 rounded-3xl shadow-2xl border border-slate-700 p-5 transform rotate-[-1deg] hover:rotate-0 transition-all duration-500 animate-float">
+                {/* ... invoice table as before ... */}
                 <div className="flex justify-between items-center mb-4">
                   <div className="flex items-center gap-2">
                     <div className="h-8 w-8 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold text-sm">Z</div>
-                    <div>
-                      <p className="font-semibold text-white text-sm">Design Studio</p>
-                      <p className="text-xs text-slate-400">hello@designstudio.com</p>
-                    </div>
+                    <div><p className="font-semibold text-white text-sm">Design Studio</p><p className="text-xs text-slate-400">hello@designstudio.com</p></div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm font-bold text-white uppercase tracking-wider">Invoice</p>
-                    <p className="text-xs text-slate-400">#INV‑0001</p>
-                  </div>
+                  <div className="text-right"><p className="text-sm font-bold text-white uppercase tracking-wider">Invoice</p><p className="text-xs text-slate-400">#INV‑0001</p></div>
                 </div>
                 <table className="w-full text-sm mb-4">
-                  <thead>
-                    <tr className="border-b border-slate-700 text-slate-400 text-xs uppercase tracking-wider">
-                      <th className="py-2 text-left">Description</th><th className="py-2 text-center">Qty</th><th className="py-2 text-right">Price</th><th className="py-2 text-right">Amount</th>
-                    </tr>
-                  </thead>
+                  <thead><tr className="border-b border-slate-700 text-slate-400 text-xs uppercase tracking-wider"><th className="py-2 text-left">Description</th><th className="py-2 text-center">Qty</th><th className="py-2 text-right">Price</th><th className="py-2 text-right">Amount</th></tr></thead>
                   <tbody>
                     <tr><td className="py-2 text-slate-200">Logo design</td><td className="py-2 text-center text-slate-400">1</td><td className="py-2 text-right text-slate-400">$500</td><td className="py-2 text-right font-medium text-white">$500</td></tr>
                     <tr><td className="py-2 text-slate-200">Brand guidelines</td><td className="py-2 text-center text-slate-400">1</td><td className="py-2 text-right text-slate-400">$300</td><td className="py-2 text-right font-medium text-white">$300</td></tr>
@@ -302,32 +267,12 @@ export default function LandingPage() {
                   <span className="text-xs px-2 py-1 rounded-full bg-cyan-500/10 text-cyan-400 font-medium">Smart Tax</span>
                 </div>
               </div>
-
-              <div className="absolute -bottom-6 -left-4 bg-slate-800 rounded-2xl shadow-lg border border-slate-700 p-4 animate-float" style={{ animationDelay: '0.5s' }}>
-                <p className="text-xs text-slate-400">📊 Analytics</p>
-                <div className="flex gap-2 mt-2">
-                  <div className="h-2 w-12 bg-indigo-500 rounded-full"></div>
-                  <div className="h-2 w-8 bg-cyan-500 rounded-full"></div>
-                  <div className="h-2 w-16 bg-emerald-500 rounded-full"></div>
-                </div>
-              </div>
-              <div className="absolute -bottom-4 -right-6 bg-slate-800 rounded-2xl shadow-lg border border-slate-700 p-4 animate-float" style={{ animationDelay: '0.8s' }}>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-slate-400">Recent Invoices</span>
-                  <span className="text-xs text-indigo-400 font-medium">+12%</span>
-                </div>
-                <div className="mt-2 space-y-1">
-                  {[1,2,3].map((i) => (
-                    <div key={i} className="flex justify-between text-xs"><span className="text-slate-300">Client {i}</span><span className="text-slate-500">$120</span></div>
-                  ))}
-                </div>
-              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ========== 3. SOCIAL PROOF (modest numbers) ========== */}
+      {/* ========== SOCIAL PROOF (modest) ========== */}
       <section className="py-12 bg-slate-800/30 border-y border-slate-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
           {[
@@ -344,7 +289,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ========== 4. FEATURES ========== */}
+      {/* ========== FEATURES ========== */}
       <section id="features" className="py-20 sm:py-24 max-w-7xl mx-auto px-4 sm:px-6">
         <h2 className="text-3xl sm:text-4xl font-bold text-white text-center mb-12">Powerful Features</h2>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -357,25 +302,41 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ========== 5. INVOICE TEMPLATES ========== */}
+      {/* ========== INVOICE TEMPLATES ========== */}
       <section id="templates" className="py-20 sm:py-24 bg-slate-800/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <h2 className="text-3xl sm:text-4xl font-bold text-white text-center mb-12">Beautiful Invoice Templates</h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {templates.map((t) => (
-              <TemplateCard key={t.name} {...t} />
+            {templates.map((t, idx) => (
+              <TemplateCard key={idx} {...t} onClick={() => {}} />
             ))}
           </div>
         </div>
       </section>
 
-      {/* ========== 6. PRODUCT SHOWCASE ========== */}
-      <section className="py-20 sm:py-24 space-y-20">
+      {/* ========== HOW IT WORKS (brief) ========== */}
+      <section className="py-20 sm:py-24 max-w-7xl mx-auto px-4 sm:px-6">
+        <h2 className="text-3xl sm:text-4xl font-bold text-white text-center mb-12">How It Works</h2>
+        <div className="grid sm:grid-cols-3 gap-8 text-center">
+          {[
+            { step: "01", title: "Describe the invoice", desc: "Type what you need in plain English." },
+            { step: "02", title: "AI fills everything", desc: "The smart assistant creates the invoice instantly." },
+            { step: "03", title: "Download & share", desc: "Get a polished PDF or send a live link to your client." },
+          ].map((s, i) => (
+            <div key={i} className="relative">
+              <div className="h-12 w-12 rounded-full bg-indigo-600 text-white text-lg font-bold flex items-center justify-center mx-auto mb-4 shadow-lg">{s.step}</div>
+              <h3 className="text-lg font-semibold text-white mb-2">{s.title}</h3>
+              <p className="text-slate-400 text-sm">{s.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ========== PRODUCT SHOWCASE ========== */}
+      <section className="py-20 sm:py-24 space-y-20 bg-slate-800/30">
         {[
           { title: "AI Invoice Creation", desc: "Simply chat with the AI and watch it build a complete invoice.", img: "/ai-mockup.png" },
-          { title: "Powerful Invoice Editor", desc: "Edit every detail — items, tax, discount, notes — in real time.", img: "/editor-mockup.png" },
           { title: "Smart Dashboard", desc: "Track all your invoices, clients, and payments from one place.", img: "/dashboard-mockup.png" },
-          { title: "One‑Click PDF Export", desc: "Download polished PDFs or send live invoice links to clients.", img: "/pdf-mockup.png" },
         ].map((item, i) => (
           <div key={i} className={`max-w-7xl mx-auto px-4 sm:px-6 grid md:grid-cols-2 gap-8 items-center ${i % 2 !== 0 ? 'md:flex-row-reverse' : ''}`}>
             <div className={`${i % 2 !== 0 ? 'md:order-2' : ''}`}>
@@ -391,7 +352,7 @@ export default function LandingPage() {
         ))}
       </section>
 
-      {/* ========== 7. TESTIMONIALS ========== */}
+      {/* ========== TESTIMONIALS ========== */}
       <section className="py-20 sm:py-24 max-w-7xl mx-auto px-4 sm:px-6">
         <h2 className="text-3xl sm:text-4xl font-bold text-white text-center mb-12">What Our Users Say</h2>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -401,7 +362,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ========== 8. FAQ ========== */}
+      {/* ========== FAQ ========== */}
       <section id="faq" className="py-20 sm:py-24 max-w-3xl mx-auto px-4 sm:px-6">
         <h2 className="text-3xl sm:text-4xl font-bold text-white text-center mb-12">Frequently Asked Questions</h2>
         <div className="space-y-4">
@@ -416,10 +377,7 @@ export default function LandingPage() {
             "Do I need a credit card?",
           ].map((question, idx) => (
             <div key={idx} className="bg-slate-800/50 border border-slate-700/50 rounded-xl overflow-hidden">
-              <button
-                onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
-                className="w-full flex justify-between items-center px-6 py-4 text-left text-white font-semibold hover:bg-slate-800 transition"
-              >
+              <button onClick={() => setOpenFaq(openFaq === idx ? null : idx)} className="w-full flex justify-between items-center px-6 py-4 text-left text-white font-semibold hover:bg-slate-800 transition">
                 <span>{question}</span>
                 <span className={`transform transition-transform ${openFaq === idx ? 'rotate-45' : ''}`}>+</span>
               </button>
@@ -433,7 +391,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ========== 9. SECURITY ========== */}
+      {/* ========== SECURITY ========== */}
       <section className="py-16 bg-slate-800/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center">
           <div className="flex flex-wrap justify-center gap-8 items-center">
@@ -451,7 +409,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ========== 10. FINAL CTA ========== */}
+      {/* ========== FINAL CTA ========== */}
       <section className="py-20 sm:py-24 text-center">
         <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">Start Creating Professional Invoices Today</h2>
         <p className="text-slate-400 mb-8">Generate unlimited AI invoices for free. No credit card required.</p>
@@ -460,32 +418,32 @@ export default function LandingPage() {
         </Link>
       </section>
 
-      {/* ========== 11. FOOTER ========== */}
-      <footer className="border-t border-slate-800 py-12" id="contact">
+      {/* ========== FOOTER ========== */}
+      <footer className="border-t border-slate-800 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-2 sm:grid-cols-4 gap-8">
           <div>
             <h4 className="text-white font-semibold mb-4">Product</h4>
             <ul className="space-y-2 text-sm text-slate-400">
               <li><a href="#features" className="hover:text-white transition">Features</a></li>
               <li><a href="#templates" className="hover:text-white transition">Templates</a></li>
-              <li><a href="#faq" className="hover:text-white transition">FAQ</a></li>
               <li><Link href="/dashboard" className="hover:text-white transition">Dashboard</Link></li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="text-white font-semibold mb-4">Resources</h4>
-            <ul className="space-y-2 text-sm text-slate-400">
-              <li><a href="#" className="hover:text-white transition">Documentation</a></li>
-              <li><a href="#" className="hover:text-white transition">Help Center</a></li>
-              <li><a href="#" className="hover:text-white transition">Contact</a></li>
+              <li><Link href="/new" className="hover:text-white transition">Create Invoice</Link></li>
             </ul>
           </div>
           <div>
             <h4 className="text-white font-semibold mb-4">Company</h4>
             <ul className="space-y-2 text-sm text-slate-400">
-              <li><a href="#" className="hover:text-white transition">About</a></li>
-              <li><a href="#" className="hover:text-white transition">Privacy Policy</a></li>
-              <li><a href="#" className="hover:text-white transition">Terms of Service</a></li>
+              <li><Link href="/about" className="hover:text-white transition">About</Link></li>
+              <li><Link href="/contact" className="hover:text-white transition">Contact</Link></li>
+              <li><Link href="/privacy" className="hover:text-white transition">Privacy Policy</Link></li>
+              <li><Link href="/terms" className="hover:text-white transition">Terms of Service</Link></li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="text-white font-semibold mb-4">Support</h4>
+            <ul className="space-y-2 text-sm text-slate-400">
+              <li><a href="#faq" className="hover:text-white transition">FAQ</a></li>
+              <li><a href="mailto:support@zuniq-invoices.vercel.app" className="hover:text-white transition">Email Support</a></li>
             </ul>
           </div>
           <div>
@@ -493,8 +451,6 @@ export default function LandingPage() {
             <div className="flex gap-4 text-slate-400">
               <span className="hover:text-white transition cursor-pointer">🐦</span>
               <span className="hover:text-white transition cursor-pointer">💼</span>
-              <span className="hover:text-white transition cursor-pointer">📘</span>
-              <span className="hover:text-white transition cursor-pointer">📷</span>
             </div>
           </div>
         </div>
@@ -503,7 +459,7 @@ export default function LandingPage() {
         </div>
       </footer>
 
-      {/* ========== LIVE DEMO MODAL ========== */}
+      {/* ========== DEMO MODAL ========== */}
       {demoModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setDemoModal(false)}>
           <div className="bg-slate-800 rounded-3xl shadow-2xl max-w-2xl w-full p-6 sm:p-8 animate-fade-in-up" onClick={(e) => e.stopPropagation()}>
