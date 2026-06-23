@@ -2,9 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 
-/* ──────────────────────────────
-   Icons – Tiny, line‑style, premium
-   ────────────────────────────── */
+/* ──────── Icons (tiny functions) ──────── */
 const Icon = {
   sparkle: () => (
     <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -32,36 +30,9 @@ const Icon = {
     </svg>
   ),
 };
-      <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
-    </svg>
-  ),
-  bolt: (
-    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-    </svg>
-  ),
-  check: (
-    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-    </svg>
-  ),
-  shield: (
-    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-    </svg>
-  ),
-  star: (
-    <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-    </svg>
-  ),
-};
 
-/* ──────────────────────────────
-   Reusable Components
-   ────────────────────────────── */
+/* ──────── Reusable Components ──────── */
 
-/** Trust badge */
 function TrustBadge({ text }: { text: string }) {
   return (
     <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-400">
@@ -70,12 +41,11 @@ function TrustBadge({ text }: { text: string }) {
   );
 }
 
-/** Feature Card */
-function FeatureCard({ icon, title, desc }: { icon: React.ReactNode; title: string; desc: string }) {
+function FeatureCard({ icon: IconComp, title, desc }: { icon: React.ComponentType; title: string; desc: string }) {
   return (
     <div className="group bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6 hover:border-indigo-500/50 hover:bg-slate-800/70 transition-all duration-300 hover:shadow-[0_0_30px_rgba(99,102,241,0.15)]">
       <div className="h-10 w-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 mb-4 group-hover:scale-110 transition-transform">
-        {icon}
+        <IconComp />
       </div>
       <h3 className="text-lg font-semibold text-white mb-2">{title}</h3>
       <p className="text-slate-400 text-sm leading-relaxed">{desc}</p>
@@ -83,7 +53,6 @@ function FeatureCard({ icon, title, desc }: { icon: React.ReactNode; title: stri
   );
 }
 
-/** Testimonial Card */
 function TestimonialCard({ avatar, name, role, text }: { avatar: string; name: string; role: string; text: string }) {
   return (
     <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl p-6 flex flex-col gap-4">
@@ -106,14 +75,15 @@ function TestimonialCard({ avatar, name, role, text }: { avatar: string; name: s
   );
 }
 
+/* ──────── Main Page ──────── */
+
 export default function LandingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   return (
     <div className="bg-slate-900 text-slate-100 selection:bg-indigo-500/30 font-sans overflow-x-hidden">
-      {/* ==========================================
-          1. NAVIGATION
-          ========================================== */}
+
+      {/* ========== 1. Navigation ========== */}
       <nav className="sticky top-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
           {/* Logo */}
@@ -124,7 +94,7 @@ export default function LandingPage() {
             <span className="text-lg font-bold text-white">Zuniq Invoices</span>
           </Link>
 
-          {/* Center links (hidden on mobile) */}
+          {/* Center links */}
           <div className="hidden lg:flex items-center gap-6 text-sm font-medium text-slate-400">
             <a href="#features" className="hover:text-white transition">Features</a>
             <a href="#templates" className="hover:text-white transition">Templates</a>
@@ -147,11 +117,8 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      {/* ==========================================
-          2. HERO SECTION
-          ========================================== */}
+      {/* ========== 2. Hero Section ========== */}
       <section className="relative overflow-hidden pt-16 sm:pt-24 pb-20 sm:pb-28 px-4 sm:px-6">
-        {/* Background gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-cyan-500/5 pointer-events-none" />
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
           {/* Left text */}
@@ -188,13 +155,13 @@ export default function LandingPage() {
           {/* Right: Dashboard preview (floating cards) */}
           <div className="relative flex justify-center lg:justify-end">
             <div className="relative w-full max-w-md">
-              {/* Floating elements */}
               <div className="absolute -top-8 -left-6 bg-slate-800 rounded-2xl shadow-xl p-4 z-20 max-w-[180px] animate-float">
                 <p className="text-sm text-slate-300">💬 Invoice for Ali, 3 designs...</p>
               </div>
-              <div className="absolute -top-4 right-4 bg-indigo-600 text-white rounded-full px-3 py-1 text-xs font-medium shadow-lg animate-fade-in-up" style={{ animationDelay: '0.2s' }}>✨ AI Processing</div>
+              <div className="absolute -top-4 right-4 bg-indigo-600 text-white rounded-full px-3 py-1 text-xs font-medium shadow-lg animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+                ✨ AI Processing
+              </div>
 
-              {/* Main dashboard mockup */}
               <div className="bg-slate-800 rounded-3xl shadow-2xl border border-slate-700 p-5 transform rotate-[-1deg] hover:rotate-0 transition-all duration-500 animate-float">
                 <div className="flex justify-between items-center mb-4">
                   <div className="flex items-center gap-2">
@@ -229,7 +196,6 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              {/* Smaller floating cards */}
               <div className="absolute -bottom-6 -left-4 bg-slate-800 rounded-2xl shadow-lg border border-slate-700 p-4 animate-float" style={{ animationDelay: '0.5s' }}>
                 <p className="text-xs text-slate-400">📊 Analytics</p>
                 <div className="flex gap-2 mt-2">
@@ -254,9 +220,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ==========================================
-          3. SOCIAL PROOF
-          ========================================== */}
+      {/* ========== 3. Social Proof ========== */}
       <section className="py-12 bg-slate-800/30 border-y border-slate-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
           {[
@@ -273,7 +237,6 @@ export default function LandingPage() {
         </div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-8 flex flex-wrap justify-center items-center gap-6 opacity-60">
           <p className="text-sm text-slate-500">Trusted by freelancers, agencies, and startups</p>
-          {/* Placeholder logos */}
           <div className="flex gap-6">
             {["Acme", "Globex", "Initech", "Umbrella"].map((name) => (
               <span key={name} className="text-slate-600 text-xs font-bold uppercase tracking-widest">{name}</span>
@@ -282,24 +245,20 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ==========================================
-          4. FEATURES
-          ========================================== */}
+      {/* ========== 4. Features ========== */}
       <section id="features" className="py-20 sm:py-24 max-w-7xl mx-auto px-4 sm:px-6">
         <h2 className="text-3xl sm:text-4xl font-bold text-white text-center mb-12">Powerful Features</h2>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          <FeatureCard icon={<Icon.sparkle />} title="AI Invoice Generation" desc="Describe your invoice naturally and let AI generate it." />
-          <FeatureCard icon={<Icon.bolt />} title="Professional PDF Export" desc="Generate beautiful downloadable invoices." />
-          <FeatureCard icon={<Icon.shield />} title="Client Dashboard" desc="Manage all your customers in one place." />
-          <FeatureCard icon={<Icon.check />} title="Invoice History" desc="Every invoice is automatically saved." />
-          <FeatureCard icon={<Icon.star />} title="Analytics" desc="Track payments and invoices." />
-          <FeatureCard icon={<Icon.shield />} title="Brand Customization" desc="Upload your own logo and branding." />
+          <FeatureCard icon={Icon.sparkle} title="AI Invoice Generation" desc="Describe your invoice naturally and let AI generate it." />
+          <FeatureCard icon={Icon.bolt} title="Professional PDF Export" desc="Generate beautiful downloadable invoices." />
+          <FeatureCard icon={Icon.shield} title="Client Dashboard" desc="Manage all your customers in one place." />
+          <FeatureCard icon={Icon.check} title="Invoice History" desc="Every invoice is automatically saved." />
+          <FeatureCard icon={Icon.star} title="Analytics" desc="Track payments and invoices." />
+          <FeatureCard icon={Icon.shield} title="Brand Customization" desc="Upload your own logo and branding." />
         </div>
       </section>
 
-      {/* ==========================================
-          5. PRODUCT SHOWCASE (alternating)
-          ========================================== */}
+      {/* ========== 5. Product Showcase ========== */}
       <section id="product-showcase" className="py-20 sm:py-24 space-y-20">
         {[
           { title: "Smart Dashboard", desc: "Track all your invoices, payments, and clients at a glance.", img: "/dashboard-mockup.png" },
@@ -321,9 +280,7 @@ export default function LandingPage() {
         ))}
       </section>
 
-      {/* ==========================================
-          6. HOW IT WORKS (timeline)
-          ========================================== */}
+      {/* ========== 6. How It Works ========== */}
       <section className="py-20 sm:py-24 bg-slate-800/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <h2 className="text-3xl sm:text-4xl font-bold text-white text-center mb-16">How It Works</h2>
@@ -346,9 +303,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ==========================================
-          7. INVOICE TEMPLATES
-          ========================================== */}
+      {/* ========== 7. Invoice Templates ========== */}
       <section id="templates" className="py-20 sm:py-24 max-w-7xl mx-auto px-4 sm:px-6">
         <h2 className="text-3xl sm:text-4xl font-bold text-white text-center mb-12">Beautiful Invoice Templates</h2>
         <div className="grid sm:grid-cols-3 lg:grid-cols-6 gap-4">
@@ -361,9 +316,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ==========================================
-          8. WHY CHOOSE ZUNIQ
-          ========================================== */}
+      {/* ========== 8. Why Choose Zuniq ========== */}
       <section className="py-20 sm:py-24 bg-slate-800/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 grid md:grid-cols-2 gap-8">
           <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-6">
@@ -390,36 +343,17 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ==========================================
-          9. TESTIMONIALS
-          ========================================== */}
+      {/* ========== 9. Testimonials ========== */}
       <section className="py-20 sm:py-24 max-w-7xl mx-auto px-4 sm:px-6">
         <h2 className="text-3xl sm:text-4xl font-bold text-white text-center mb-12">What Our Users Say</h2>
         <div className="grid sm:grid-cols-3 gap-6">
-          <TestimonialCard
-            avatar="/avatar1.png"
-            name="Sarah Chen"
-            role="Freelance Designer"
-            text="This is the fastest invoice tool I've ever used."
-          />
-          <TestimonialCard
-            avatar="/avatar2.png"
-            name="Mike Johnson"
-            role="Agency Owner"
-            text="Zuniq saves me hours every week. The AI is incredibly accurate."
-          />
-          <TestimonialCard
-            avatar="/avatar3.png"
-            name="Emily Roberts"
-            role="Consultant"
-            text="I love how professional the invoices look. My clients are impressed."
-          />
+          <TestimonialCard avatar="/avatar1.png" name="Sarah Chen" role="Freelance Designer" text="This is the fastest invoice tool I've ever used." />
+          <TestimonialCard avatar="/avatar2.png" name="Mike Johnson" role="Agency Owner" text="Zuniq saves me hours every week. The AI is incredibly accurate." />
+          <TestimonialCard avatar="/avatar3.png" name="Emily Roberts" role="Consultant" text="I love how professional the invoices look. My clients are impressed." />
         </div>
       </section>
 
-      {/* ==========================================
-          10. PRICING
-          ========================================== */}
+      {/* ========== 10. Pricing ========== */}
       <section id="pricing" className="py-20 sm:py-24 bg-slate-800/30">
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
           <h2 className="text-3xl sm:text-4xl font-bold text-white text-center mb-12">Simple, Transparent Pricing</h2>
@@ -455,9 +389,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ==========================================
-          11. FAQ
-          ========================================== */}
+      {/* ========== 11. FAQ ========== */}
       <section id="faq" className="py-20 sm:py-24 max-w-3xl mx-auto px-4 sm:px-6">
         <h2 className="text-3xl sm:text-4xl font-bold text-white text-center mb-12">Frequently Asked Questions</h2>
         <div className="space-y-4">
@@ -489,9 +421,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ==========================================
-          12. SECURITY
-          ========================================== */}
+      {/* ========== 12. Security ========== */}
       <section className="py-16 bg-slate-800/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center">
           <div className="flex flex-wrap justify-center gap-8 items-center">
@@ -509,9 +439,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ==========================================
-          13. FINAL CTA
-          ========================================== */}
+      {/* ========== 13. Final CTA ========== */}
       <section className="py-20 sm:py-24 text-center">
         <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">Start Creating Professional Invoices Today</h2>
         <p className="text-slate-400 mb-8">Generate unlimited AI invoices for free.</p>
@@ -520,9 +448,7 @@ export default function LandingPage() {
         </Link>
       </section>
 
-      {/* ==========================================
-          14. FOOTER
-          ========================================== */}
+      {/* ========== 14. Footer ========== */}
       <footer className="border-t border-slate-800 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-2 sm:grid-cols-4 gap-8">
           <div>
@@ -555,7 +481,6 @@ export default function LandingPage() {
           <div>
             <h4 className="text-white font-semibold mb-4">Connect</h4>
             <div className="flex gap-4 text-slate-400">
-              {/* Placeholder social icons */}
               <span className="hover:text-white transition cursor-pointer">🐦</span>
               <span className="hover:text-white transition cursor-pointer">💼</span>
               <span className="hover:text-white transition cursor-pointer">📘</span>
