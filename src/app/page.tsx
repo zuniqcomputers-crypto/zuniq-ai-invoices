@@ -2,7 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 
-/* ────────── Icons (tiny functions) ────────── */
+/* ────── Tiny, line‑style Icons ────── */
 const Icon = {
   sparkle: () => (
     <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -50,9 +50,21 @@ const Icon = {
       <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
     </svg>
   ),
+  globe: () => (
+    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <circle cx="12" cy="12" r="10" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10A15.3 15.3 0 0112 2z" />
+    </svg>
+  ),
+  lock: () => (
+    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M7 11V7a5 5 0 0110 0v4" />
+    </svg>
+  ),
 };
 
-/* ────────── Reusable Components ────────── */
+/* ────── Reusable Components ────── */
 
 function TrustBadge({ text }: { text: string }) {
   return (
@@ -183,6 +195,7 @@ export default function LandingPage() {
 
   return (
     <div className="bg-slate-900 text-slate-100 selection:bg-indigo-500/30 font-sans overflow-x-hidden">
+
       {/* ========== NAVIGATION ========== */}
       <nav className="sticky top-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
@@ -202,41 +215,35 @@ export default function LandingPage() {
               Dashboard
             </Link>
             <Link href="/new" className="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg font-semibold shadow-lg transition-all text-sm">
-              <Icon.bolt /> Start Free
+              <Icon.bolt /> Elevate Your Billing
             </Link>
           </div>
         </div>
       </nav>
 
-      {/* ========== HERO SECTION ========== */}
+      {/* ========== HERO (Upgraded) ========== */}
       <section className="relative overflow-hidden pt-16 sm:pt-24 pb-20 sm:pb-28 px-4 sm:px-6">
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-cyan-500/5 pointer-events-none" />
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
           <div className="relative z-10">
             <h1 className="text-4xl sm:text-6xl font-extrabold text-white tracking-tight leading-tight">
-              AI Invoices Done for You
+              Intelligent Invoicing for the Modern Enterprise.
             </h1>
             <p className="mt-6 text-base sm:text-lg text-slate-400 max-w-xl leading-relaxed">
-              Chat with our AI, answer a few questions, and get a polished invoice instantly — free forever.
+              Harness the power of AI to generate, manage, and track professional financial documents with surgical precision. Secure, seamless, and sophisticated.
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-4">
               <Link href="/new" className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-3.5 rounded-xl font-bold text-base shadow-xl transition-all hover:scale-105">
-                <Icon.bolt /> Start Creating Free
+                <Icon.bolt /> Elevate Your Billing
               </Link>
               <button onClick={() => setDemoModal(true)} className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white px-8 py-3.5 rounded-xl font-semibold text-base transition-all">
                 <Icon.eye /> See Live Demo
               </button>
             </div>
-            <div className="mt-6 flex flex-wrap gap-x-4 gap-y-2">
-              <TrustBadge text="Free Forever" />
-              <TrustBadge text="No Credit Card Required" />
-              <TrustBadge text="Unlimited Invoices" />
-              <TrustBadge text="Professional PDF Export" />
-              <TrustBadge text="AI Powered" />
-            </div>
+            <p className="mt-4 text-xs text-slate-500">Enterprise-grade PDF exports. Trusted in 20+ countries. Secure by design.</p>
           </div>
 
-          {/* Dashboard preview (floating cards) */}
+          {/* Dashboard preview (unchanged) */}
           <div className="relative flex justify-center lg:justify-end">
             <div className="relative w-full max-w-md">
               <div className="absolute -top-8 -left-6 bg-slate-800 rounded-2xl shadow-xl p-4 z-20 max-w-[180px] animate-float">
@@ -244,7 +251,6 @@ export default function LandingPage() {
               </div>
               <div className="absolute -top-4 right-4 bg-indigo-600 text-white rounded-full px-3 py-1 text-xs font-medium shadow-lg animate-fade-in-up" style={{ animationDelay: '0.2s' }}>✨ AI Processing</div>
               <div className="bg-slate-800 rounded-3xl shadow-2xl border border-slate-700 p-5 transform rotate-[-1deg] hover:rotate-0 transition-all duration-500 animate-float">
-                {/* ... invoice table as before ... */}
                 <div className="flex justify-between items-center mb-4">
                   <div className="flex items-center gap-2">
                     <div className="h-8 w-8 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold text-sm">Z</div>
@@ -289,16 +295,19 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ========== FEATURES ========== */}
+      {/* ========== FEATURES (Consolidated & New) ========== */}
       <section id="features" className="py-20 sm:py-24 max-w-7xl mx-auto px-4 sm:px-6">
-        <h2 className="text-3xl sm:text-4xl font-bold text-white text-center mb-12">Powerful Features</h2>
+        <h2 className="text-3xl sm:text-4xl font-bold text-white text-center mb-12">Powerful, Intelligent, Secure</h2>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          <FeatureCard icon={Icon.sparkle} title="AI Invoice Generation" desc="Describe your invoice naturally and let AI generate it instantly." />
-          <FeatureCard icon={Icon.document} title="Professional PDF Export" desc="Download beautiful, print‑ready invoices with one click." />
-          <FeatureCard icon={Icon.users} title="Client Management" desc="Save client details, track history, and reuse them for future invoices." />
-          <FeatureCard icon={Icon.eye} title="Invoice History" desc="Every invoice is automatically saved. Search, filter, and export anytime." />
-          <FeatureCard icon={Icon.chart} title="Smart Analytics" desc="Track payments, overdue invoices, and monthly revenue at a glance." />
-          <FeatureCard icon={Icon.shield} title="Brand Customization" desc="Upload your logo, choose templates, and make invoices truly yours." />
+          <FeatureCard icon={Icon.sparkle} title="Predictive Document Generation" desc="Describe your requirements in plain language. Our AI engine instantly constructs compliant, multi-currency invoices tailored to your brand." />
+          <FeatureCard icon={Icon.chart} title="Financial Intelligence & Analytics" desc="Go beyond basic tracking. Visualize revenue trends, monitor aging receivables, and optimize your cash flow through our smart dashboard." />
+          <FeatureCard icon={Icon.shield} title="White-Label Brand Customization" desc="Upload your corporate identity and choose from a curated collection of high-end templates, including 'Luxury' and 'Corporate' themes designed for elite professionals." />
+        </div>
+
+        {/* Two new features */}
+        <div className="mt-10 grid sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
+          <FeatureCard icon={Icon.lock} title="Secure Client Portals" desc="Provide your clients with a premium experience. Send a 'Live Link' where they can view, download, and manage their invoice history in a secure, branded environment." />
+          <FeatureCard icon={Icon.globe} title="Global Compliance & Tax Engine" desc="Automatically calculate localized taxes (VAT, GST) and handle 20+ currencies with real-time accuracy." />
         </div>
       </section>
 
@@ -314,7 +323,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ========== HOW IT WORKS (brief) ========== */}
+      {/* ========== HOW IT WORKS (unchanged) ========== */}
       <section className="py-20 sm:py-24 max-w-7xl mx-auto px-4 sm:px-6">
         <h2 className="text-3xl sm:text-4xl font-bold text-white text-center mb-12">How It Works</h2>
         <div className="grid sm:grid-cols-3 gap-8 text-center">
@@ -332,7 +341,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ========== PRODUCT SHOWCASE ========== */}
+      {/* ========== PRODUCT SHOWCASE (unchanged) ========== */}
       <section className="py-20 sm:py-24 space-y-20 bg-slate-800/30">
         {[
           { title: "AI Invoice Creation", desc: "Simply chat with the AI and watch it build a complete invoice.", img: "/ai-mockup.png" },
@@ -362,47 +371,47 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ========== FAQ ========== */}
+      {/* ========== FAQ (Refined) ========== */}
       <section id="faq" className="py-20 sm:py-24 max-w-3xl mx-auto px-4 sm:px-6">
         <h2 className="text-3xl sm:text-4xl font-bold text-white text-center mb-12">Frequently Asked Questions</h2>
         <div className="space-y-4">
           {[
-            "Is Zuniq Invoices really free?",
-            "Can I export invoices as PDF?",
-            "Can I upload my own logo?",
-            "Can I edit invoices after creating them?",
-            "Does it support multiple currencies?",
-            "Can I add taxes and discounts?",
-            "Is my data secure?",
-            "Do I need a credit card?",
-          ].map((question, idx) => (
+            { q: "How does Zuniq handle data security?", a: "We utilize encrypted data protocols and secure cloud storage to ensure every transaction is protected." },
+            { q: "Can I export for accounting software?", a: "Yes, generate professional PDF exports or use our dashboard to export data for your financial reporting." },
+            { q: "Is Zuniq Invoices really free?", a: "Absolutely! Zuniq Invoices is free forever with all core features. No credit card required." },
+            { q: "Can I upload my own logo?", a: "Yes, you can upload your logo and customize your invoices to match your brand." },
+            { q: "Does it support multiple currencies?", a: "Yes, Zuniq supports over 20 currencies and automatically calculates localized taxes." },
+            { q: "Can I add taxes and discounts?", a: "Of course. You can add tax percentages, discounts, and even advance payments to any invoice." },
+          ].map((item, idx) => (
             <div key={idx} className="bg-slate-800/50 border border-slate-700/50 rounded-xl overflow-hidden">
               <button onClick={() => setOpenFaq(openFaq === idx ? null : idx)} className="w-full flex justify-between items-center px-6 py-4 text-left text-white font-semibold hover:bg-slate-800 transition">
-                <span>{question}</span>
+                <span>{item.q}</span>
                 <span className={`transform transition-transform ${openFaq === idx ? 'rotate-45' : ''}`}>+</span>
               </button>
               {openFaq === idx && (
-                <div className="px-6 pb-4 text-sm text-slate-400">
-                  Absolutely! Zuniq Invoices is free forever with all core features. No credit card required.
-                </div>
+                <div className="px-6 pb-4 text-sm text-slate-400">{item.a}</div>
               )}
             </div>
           ))}
         </div>
       </section>
 
-      {/* ========== SECURITY ========== */}
+      {/* ========== SECURITY (Enterprise) ========== */}
       <section className="py-16 bg-slate-800/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center">
-          <div className="flex flex-wrap justify-center gap-8 items-center">
+          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-10">Bank-Level Security for Your Peace of Mind</h2>
+          <div className="grid sm:grid-cols-3 gap-8">
             {[
-              { icon: <Icon.shield />, label: "Secure Cloud Storage" },
-              { icon: <Icon.shield />, label: "Privacy First" },
-              { icon: <Icon.shield />, label: "Encrypted Data" },
-              { icon: <Icon.shield />, label: "Reliable Infrastructure" },
+              { icon: <Icon.lock />, title: "AES-256 Encryption", desc: "Your financial data is encrypted at rest and in transit." },
+              { icon: <Icon.shield />, title: "Privacy-First Architecture", desc: "We never sell your data. Your clients' information remains yours alone." },
+              { icon: <Icon.check />, title: "99.9% Uptime Guarantee", desc: "Reliable infrastructure to ensure your business never pauses." },
             ].map((item, i) => (
-              <div key={i} className="flex items-center gap-2 text-sm font-medium text-slate-400">
-                {item.icon} {item.label}
+              <div key={i} className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6">
+                <div className="h-10 w-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 mb-4 mx-auto">
+                  {item.icon}
+                </div>
+                <h3 className="text-lg font-semibold text-white mb-2">{item.title}</h3>
+                <p className="text-slate-400 text-sm">{item.desc}</p>
               </div>
             ))}
           </div>
@@ -414,7 +423,7 @@ export default function LandingPage() {
         <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">Start Creating Professional Invoices Today</h2>
         <p className="text-slate-400 mb-8">Generate unlimited AI invoices for free. No credit card required.</p>
         <Link href="/new" className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-8 py-3.5 rounded-xl font-bold text-base shadow-xl transition-all hover:scale-105">
-          <Icon.bolt /> Create My First Invoice
+          <Icon.bolt /> Elevate Your Billing
         </Link>
       </section>
 
