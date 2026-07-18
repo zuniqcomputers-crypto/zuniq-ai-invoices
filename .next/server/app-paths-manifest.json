@@ -1,5 +1,17 @@
 {
-  "/not-found": "app/not-found.js",
+  "/_not-found": "app/_not-found.js",
+  "/api/invoice/[id]/pdf/route": "app/api/invoice/[id]/pdf/route.js",
+  "/about/page": "app/about/page.js",
+  "/contact/page": "app/contact/page.js",
+  "/privacy/page": "app/privacy/page.js",
+  "/api/invoice/[id]/route": "app/api/invoice/[id]/route.js",
+  "/edit/[id]/page": "app/edit/[id]/page.js",
+  "/new/page": "app/new/page.js",
+  "/api/smart-nudge/route": "app/api/smart-nudge/route.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/terms/page": "app/terms/page.js",
   "/page": "app/page.js",
-  "/new/page": "app/new/page.js"
+  "/view/[id]/page": "app/view/[id]/page.js",
+  "/api/chat/route": "app/api/chat/route.js",
+  "/api/invoices/route": "app/api/invoices/route.js"
 }
