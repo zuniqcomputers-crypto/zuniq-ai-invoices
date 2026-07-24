@@ -65,8 +65,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AmbientBackground>
           <main id="main-content">{children}</main>
         </AmbientBackground>
-        {/* Jotform AI Agent floating chat */}
-        <script src="https://cdn.jotfor.ms/agent/embedjs/019f4698c1a070008ea96e9f3f5288c4a537/embed.js"></script>
+    
       </body>
     </html>
   );
