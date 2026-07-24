@@ -1,355 +1,151 @@
-import React from 'react';
+"use client";
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Inter } from 'next/font/google';
 
-const inter = Inter({ subsets: ['latin'] });
-
-// --- Inline SVG Icons ---
+// --- Inline Icons ---
+const SendIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+);
 
 const LeafIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 3.5 1.1 9.2A7 7 0 0 1 11 20z" />
-    <path d="M11 20v-5" />
-    <path d="M11 15l-3-3" />
-    <path d="M11 15l3-3" />
-  </svg>
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 3.5 1.1 9.2A7 7 0 0 1 11 20z" /><path d="M11 20v-5" /><path d="M11 15l-3-3" /><path d="M11 15l3-3" /></svg>
 );
 
-const SproutIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M7 20h10" />
-    <path d="M10 20c5.5-3 5.5-13 0-16" />
-    <path d="M10 12.5a5.5 5.5 0 0 1 6.5 0" />
-    <path d="M10 12.5a5.5 5.5 0 0 0-6.5 0" />
-  </svg>
-);
+export default function InvoiceCreator() {
+  const [messages, setMessages] = useState([
+    { role: 'ai', content: "Hello Jawad! 🌿 I'm your Zuniq assistant. Tell me what you're billing for today (e.g., '3 logos for $200 each')." }
+  ]);
+  const [input, setInput] = useState("");
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-const SunIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="4" />
-    <path d="M12 2v2" />
-    <path d="M12 20v2" />
-    <path d="M4.93 4.93l1.41 1.41" />
-    <path d="M17.66 17.66l1.41 1.41" />
-    <path d="M2 12h2" />
-    <path d="M20 12h2" />
-    <path d="M6.34 17.66l-1.41 1.41" />
-    <path d="M19.07 4.93l-1.41 1.41" />
-  </svg>
-);
+  // Auto-scroll chat to bottom
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
 
-const WaterIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 22a7 7 0 0 0 7-7c0-2-6-8-7-8s-7 6-7 8a7 7 0 0 0 7 7z" />
-  </svg>
-);
+  const handleSend = () => {
+    if (!input.trim()) return;
+    setMessages([...messages, { role: 'user', content: input }]);
+    setInput("");
+    // Here you would normally call your /api/chat
+  };
 
-const ShieldIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-  </svg>
-);
-
-const ZapIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-  </svg>
-);
-
-const CheckIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="20 6 9 17 4 12" />
-  </svg>
-);
-
-// --- Content Data ---
-
-const features = [
-  {
-    title: "AI-Drafted Roots",
-    description: "Our intelligence extracts every item and tax from your natural conversation, ensuring a solid foundation.",
-    icon: <SproutIcon />,
-  },
-  {
-    title: "Natural Growth",
-    description: "Bill in over 100+ currencies with automatic formatting that adapts to your client's soil.",
-    icon: <LeafIcon />,
-  },
-  {
-    title: "Sun-Drenched Speed",
-    description: "Generate professional PDFs in under 15 seconds. No forms, no barriers, just instant blossom.",
-    icon: <SunIcon />,
-  },
-  {
-    title: "Clean Hydration",
-    description: "Your data is handled with care. We use secure encryption to keep your billing fresh and safe.",
-    icon: <WaterIcon />,
-  },
-  {
-    title: "Eco-Friendly PWA",
-    description: "Install Zuniq on any device. It's lightweight, offline-ready, and works everywhere on earth.",
-    icon: <ZapIcon />,
-  },
-  {
-    title: "Resilient Security",
-    description: "No mandatory sign-ups. Your invoices are scoped to your session, providing total privacy.",
-    icon: <ShieldIcon />,
-  },
-];
-
-const templates = [
-  { name: "Meadow", bg: "bg-blue-50", text: "text-blue-600" },
-  { name: "Clover", bg: "bg-emerald-50", text: "text-emerald-600" },
-  { name: "Sprout", bg: "bg-green-50", text: "text-green-600" },
-  { name: "Pine", bg: "bg-teal-50", text: "text-teal-600" },
-  { name: "Mint", bg: "bg-cyan-50", text: "text-cyan-600" },
-  { name: "Lime", bg: "bg-lime-50", text: "text-lime-600" },
-];
-
-// --- Main Page Component ---
-
-export default function LandingPage() {
   return (
-    <div className={`min-h-screen bg-[#f5f7f0] text-slate-800 ${inter.className}`}>
-      <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes float { 
-          0%, 100% { transform: translateY(0px) rotate(12deg); } 
-          50% { transform: translateY(-15px) rotate(14deg); } 
-        }
-        .animate-float { animation: float 6s ease-in-out infinite; }
-        details summary::-webkit-details-marker { display:none; }
-      `}} />
-
-      {/* 1. NAVBAR */}
-      <nav className="sticky top-0 z-[100] w-full border-b border-emerald-100 bg-white/70 backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-6">
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="flex h-10 w-10 items-center justify-center rounded-[12px_24px_12px_24px] bg-gradient-to-br from-emerald-400 to-green-600 shadow-sm transition-transform group-hover:rotate-12">
-              <span className="text-xl font-bold text-white italic">Z</span>
-            </div>
-            <span className="text-xl font-bold tracking-tight text-slate-900">
-              Zuniq <span className="text-green-600">Invoices</span>
-            </span>
-          </Link>
-          
-          <div className="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-600">
-            <Link href="/" className="hover:text-green-600 transition-colors">Dashboard</Link>
-            <Link 
-              href="/new" 
-              className="rounded-full bg-gradient-to-r from-emerald-400 to-green-600 px-6 py-2.5 text-white shadow-md transition-all hover:scale-105 active:scale-95"
-            >
-              Create Invoice
-            </Link>
-          </div>
-          
-          {/* Mobile Create Button */}
-          <Link href="/new" className="md:hidden rounded-full bg-green-600 p-2 text-white shadow-sm">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-          </Link>
+    <div className="min-h-screen bg-[#f5f7f0] text-slate-800 font-sans flex flex-col">
+      {/* 1. FRESH NAVBAR */}
+      <nav className="h-16 border-b border-emerald-100 bg-white/80 backdrop-blur-md sticky top-0 z-50 px-4 md:px-8 flex items-center justify-between">
+        <Link href="/" className="flex items-center gap-2 group">
+          <div className="h-9 w-9 flex items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-green-600 text-white font-bold italic shadow-sm">Z</div>
+          <span className="font-bold text-lg tracking-tight">Zuniq <span className="text-green-600">Studio</span></span>
+        </Link>
+        <div className="flex items-center gap-4">
+          <Link href="/" className="text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-green-600 transition-colors">Dashboard</Link>
+          <button className="bg-emerald-50 text-green-700 px-4 py-2 rounded-full text-xs font-bold border border-emerald-100 hover:bg-emerald-100 transition-all">Save Draft</button>
         </div>
       </nav>
 
-      {/* 2. HERO */}
-      <header className="relative overflow-hidden px-4 pt-16 pb-24 md:pt-24 md:pb-32 text-center lg:text-left">
-        <div className="mx-auto flex max-w-7xl flex-col items-center gap-16 lg:flex-row">
-          <div className="flex-1">
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-emerald-100 px-4 py-1 text-xs font-bold uppercase tracking-widest text-green-700">
-              <span className="h-2 w-2 rounded-full bg-green-600 animate-pulse"></span>
-              Free AI Billing Forever
-            </div>
-            <h1 className="mb-8 text-4xl font-extrabold leading-[1.1] tracking-tight text-slate-900 md:text-5xl xl:text-7xl">
-              Invoices that feel like <br />
-              <span className="bg-gradient-to-r from-emerald-500 to-green-700 bg-clip-text text-transparent italic">
-                walking on fresh grass.
-              </span>
-            </h1>
-            <p className="mb-10 text-lg font-medium text-slate-600 md:text-xl lg:max-w-xl">
-              Zuniq AI uses conversational intelligence to turn your chat into professional, high-end PDF invoices. No forms, no manual data entry—just simple, organic growth.
-            </p>
-            <div className="flex flex-wrap justify-center gap-4 lg:justify-start">
-              <Link 
-                href="/new" 
-                className="rounded-full bg-gradient-to-r from-emerald-400 to-green-600 px-8 py-4 text-base font-bold text-white shadow-lg transition-all hover:scale-105 active:scale-95"
+      {/* 2. MAIN WORKSPACE */}
+      <main className="flex-grow flex flex-col lg:flex-row h-[calc(100vh-64px)] overflow-hidden">
+        
+        {/* LEFT: AI CHAT (Light & Grassy) */}
+        <div className="w-full lg:w-[450px] flex flex-col border-r border-emerald-50 bg-white shadow-sm z-10">
+          <div className="p-4 border-b border-emerald-50 flex items-center gap-3 bg-emerald-50/30">
+            <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-green-700">Zuniq AI Billing Agent</span>
+          </div>
+
+          {/* Messages Area */}
+          <div ref={scrollRef} className="flex-grow overflow-y-auto p-6 space-y-6 bg-gradient-to-b from-white to-[#fcfdfa]">
+            {messages.map((msg, i) => (
+              <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <div className={`max-w-[85%] p-4 rounded-2xl shadow-sm text-sm leading-relaxed ${
+                  msg.role === 'user' 
+                    ? 'bg-gradient-to-br from-emerald-500 to-green-600 text-white rounded-tr-none' 
+                    : 'bg-emerald-50 text-slate-700 rounded-tl-none border border-emerald-100'
+                }`}>
+                  {msg.content}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Input Area */}
+          <div className="p-4 bg-white border-t border-emerald-50">
+            <div className="relative flex items-center">
+              <input 
+                type="text" 
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+                placeholder="Talk to Zuniq..."
+                className="w-full bg-slate-50 border border-emerald-100 rounded-2xl py-4 px-6 pr-14 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-sm transition-all placeholder:text-slate-400"
+              />
+              <button 
+                onClick={handleSend}
+                className="absolute right-2 p-3 bg-gradient-to-r from-emerald-400 to-green-600 text-white rounded-xl hover:shadow-lg transition-all active:scale-90"
               >
-                Try It Free
-              </Link>
-              <button className="rounded-full border-2 border-emerald-200 bg-white px-8 py-4 text-base font-bold text-green-700 shadow-sm transition-all hover:bg-emerald-50 active:scale-95">
-                How It Grows
+                <SendIcon />
               </button>
             </div>
+            <p className="mt-3 text-[10px] text-center text-slate-400 font-medium">Zuniq AI creates your invoice as you chat. 🌿</p>
+          </div>
+        </div>
+
+        {/* RIGHT: LIVE PREVIEW (The "Bespoke" Document) */}
+        <div className="flex-grow bg-[#f5f7f0] p-4 md:p-12 overflow-y-auto flex flex-col items-center">
+          <div className="w-full max-w-[700px] mb-8 flex justify-between items-center">
+            <h2 className="text-xs font-black uppercase tracking-[0.3em] text-emerald-800/40 italic">Live Document Preview</h2>
+            <button className="bg-white text-slate-800 px-6 py-2.5 rounded-full text-xs font-bold shadow-sm border border-emerald-100 hover:shadow-md transition-all active:scale-95">Download PDF</button>
           </div>
 
-          <div className="relative flex-1 items-center justify-center hidden lg:flex">
-            <div className="animate-float relative flex h-72 w-72 items-center justify-center rounded-[40%_60%_70%_30%/50%_40%_60%_50%] bg-gradient-to-br from-emerald-100 to-green-200 shadow-2xl">
-              <span className="text-9xl filter drop-shadow-lg">🌿</span>
-              <div className="absolute -top-4 -right-4 h-24 w-24 rounded-full bg-emerald-400/20 blur-xl"></div>
-              <div className="absolute -bottom-8 -left-8 h-32 w-32 rounded-full bg-green-500/10 blur-2xl"></div>
+          {/* THE INVOICE SHEET */}
+          <div className="w-full max-w-[700px] bg-white rounded-[2rem] shadow-[0_20px_50px_rgba(22,163,74,0.05)] border border-emerald-50 min-h-[900px] p-10 md:p-20 flex flex-col">
+            <div className="flex justify-between items-start mb-20">
+              <div className="space-y-4">
+                <div className="h-14 w-14 bg-emerald-50 rounded-2xl flex items-center justify-center text-green-600">
+                  <LeafIcon />
+                </div>
+                <div className="h-2 w-32 bg-slate-100 rounded-full"></div>
+                <div className="h-2 w-24 bg-slate-50 rounded-full"></div>
+              </div>
+              <div className="text-right">
+                <h1 className="text-4xl font-extrabold tracking-tighter text-slate-900 uppercase italic mb-2">Invoice</h1>
+                <p className="text-[10px] font-black text-green-600 tracking-widest uppercase bg-emerald-50 px-3 py-1 rounded-full inline-block">Draft #ZIQ-001</p>
+              </div>
+            </div>
+
+            <div className="flex-grow">
+               <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-emerald-50">
+                      <th className="py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Description</th>
+                      <th className="py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="border-b border-slate-50">
+                      <td className="py-8 text-sm font-bold text-slate-700 italic">Start chatting to add items...</td>
+                      <td className="py-8 text-sm font-bold text-slate-300 text-right">$0.00</td>
+                    </tr>
+                  </tbody>
+               </table>
+            </div>
+
+            <div className="mt-20 pt-10 border-t-2 border-emerald-50 flex justify-between items-end">
+              <div className="space-y-1">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Balance</p>
+                <p className="text-5xl font-black text-slate-900 tracking-tightest italic">$0.00</p>
+              </div>
+              <div className="text-right space-y-4">
+                 <div className="h-2 w-32 bg-slate-50 rounded-full ml-auto"></div>
+                 <div className="h-10 w-40 bg-emerald-950 rounded-2xl flex items-center justify-center text-white text-[10px] font-bold uppercase tracking-widest italic">Official Zuniq Seal</div>
+              </div>
             </div>
           </div>
         </div>
-      </header>
-
-      {/* 3. FEATURES */}
-      <section className="px-4 py-24 md:py-32">
-        <div className="mx-auto max-w-7xl text-center">
-          <h2 className="mb-4 text-xs font-black uppercase tracking-[0.3em] text-green-600">Growth Engine</h2>
-          <h3 className="mb-16 text-3xl font-extrabold tracking-tight text-slate-900 md:text-5xl">
-            Rooted in Simplicity, <br /> Blooming with Power
-          </h3>
-          
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {features.map((f, i) => (
-              <div key={i} className="group rounded-3xl border border-emerald-100 bg-white p-8 text-left shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg">
-                <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-green-600 transition-colors group-hover:bg-green-600 group-hover:text-white">
-                  {f.icon}
-                </div>
-                <h4 className="mb-3 text-xl font-bold text-slate-900">{f.title}</h4>
-                <p className="text-sm font-medium leading-relaxed text-slate-500">{f.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 4. HOW IT GROWS */}
-      <section className="bg-white px-4 py-24 border-y border-emerald-50">
-        <div className="mx-auto max-w-4xl text-center">
-          <h2 className="mb-16 text-3xl font-extrabold tracking-tight text-slate-900 md:text-5xl uppercase italic">How It Grows</h2>
-          <div className="grid gap-12 md:grid-cols-3">
-            {[
-              { id: 1, em: "💬", title: "Chat", desc: "Just tell Zuniq about your work. 'I did a logo for Ali for $500'." },
-              { id: 2, em: "🌱", title: "Grow", desc: "Our AI extracts the data and prepares your invoice draft in real-time." },
-              { id: 3, em: "🌿", title: "Blossom", desc: "Download your high-resolution vector PDF and get paid by your clients." }
-            ].map((step) => (
-              <div key={step.id} className="relative flex flex-col items-center">
-                <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50 text-4xl shadow-inner">
-                  {step.em}
-                  <div className="absolute -top-2 -right-2 flex h-8 w-8 items-center justify-center rounded-full bg-green-600 text-sm font-bold text-white">
-                    {step.id}
-                  </div>
-                </div>
-                <h4 className="mb-2 text-xl font-bold text-slate-900">{step.title}</h4>
-                <p className="text-sm font-medium text-slate-500 leading-relaxed">{step.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 5. TEMPLATES */}
-      <section className="px-4 py-24 md:py-32">
-        <div className="mx-auto max-w-7xl text-center">
-          <h2 className="mb-16 text-3xl font-extrabold tracking-tight text-slate-900 md:text-5xl italic">Bespoke Templates</h2>
-          <div className="grid gap-6 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
-            {templates.map((t, i) => (
-              <div key={i} className={`group flex aspect-[1/1.4] flex-col overflow-hidden rounded-2xl border border-slate-100 shadow-sm transition-all hover:scale-[1.02] ${t.bg}`}>
-                <div className="flex-1 p-4 text-left">
-                  <div className={`text-[10px] font-black uppercase tracking-widest ${t.text}`}>{t.name}</div>
-                  <div className="mt-4 space-y-2">
-                    <div className="h-1 w-full rounded bg-white/60"></div>
-                    <div className="h-1 w-2/3 rounded bg-white/60"></div>
-                  </div>
-                </div>
-                <div className="bg-white/40 p-4 backdrop-blur-sm">
-                  <div className="h-3 w-full rounded bg-white/80 shadow-sm"></div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 6. PRICING */}
-      <section className="px-4 py-24">
-        <div className="mx-auto max-w-sm overflow-hidden rounded-[2.5rem] border-2 border-emerald-100 bg-white p-10 text-center shadow-xl shadow-emerald-900/5">
-          <h3 className="mb-2 text-xs font-black uppercase tracking-widest text-green-600">The Sprout Plan</h3>
-          <div className="mb-6 text-6xl font-extrabold text-slate-900">$0</div>
-          <p className="mb-8 text-sm font-bold text-slate-500 uppercase italic">Free for everyone, forever.</p>
-          <ul className="mb-10 space-y-4 text-left">
-            {[
-              "Unlimited Conversational Invoices",
-              "100+ Currency Support",
-              "High-Resolution PDF Export",
-              "Custom Business Branding",
-              "Client Memory System",
-              "Session-Based Privacy"
-            ].map((li, i) => (
-              <li key={i} className="flex items-center gap-3 text-sm font-semibold text-slate-600">
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 text-green-600">
-                  <CheckIcon />
-                </span>
-                {li}
-              </li>
-            ))}
-          </ul>
-          <Link 
-            href="/new" 
-            className="block w-full rounded-full bg-gradient-to-r from-emerald-400 to-green-600 py-4 text-base font-bold text-white shadow-md transition-all hover:scale-[1.02] active:scale-95"
-          >
-            Start Growing
-          </Link>
-        </div>
-      </section>
-
-      {/* 7. FAQ */}
-      <section className="px-4 py-24 md:py-32 bg-white">
-        <div className="mx-auto max-w-2xl">
-          <h2 className="mb-16 text-center text-3xl font-extrabold tracking-tight text-slate-900 md:text-5xl uppercase italic">Common Ground</h2>
-          <div className="space-y-4">
-            {[
-              { q: "Is it really free?", a: "Yes, Zuniq is rooted in our belief that simple billing tools should be free for every solopreneur. The core engine is and will remain free." },
-              { q: "How smart is the AI?", a: "We use Gemini 1.5 Pro with a deterministic system prompt. It extracts complex line items, taxes, and discounts with 99.9% accuracy." },
-              { q: "Is my data secure?", a: "We value privacy above all. Your invoices are saved to your browser session and our database using enterprise-grade encryption." }
-            ].map((faq, i) => (
-              <details key={i} className="group rounded-3xl border border-emerald-50 bg-[#f5f7f0]/50 transition-all overflow-hidden">
-                <summary className="flex cursor-pointer list-none items-center justify-between p-6 focus:outline-none">
-                  <span className="text-base font-bold text-slate-800">{faq.q}</span>
-                  <span className="text-green-600 transition-transform group-open:rotate-180">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                  </span>
-                </summary>
-                <div className="px-6 pb-6 text-sm font-medium leading-relaxed text-slate-500">
-                  {faq.a}
-                </div>
-              </details>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 8. FOOTER */}
-      <footer className="bg-emerald-950 px-4 py-20 text-white">
-        <div className="mx-auto max-w-7xl">
-          <div className="mb-16 flex flex-col items-center justify-between gap-10 md:flex-row md:items-start">
-            <div className="max-w-xs text-center md:text-left">
-              <div className="mb-6 flex items-center justify-center gap-3 md:justify-start">
-                <div className="flex h-10 w-10 items-center justify-center rounded-[8px_16px_8px_16px] bg-white text-green-900 font-bold italic">Z</div>
-                <span className="text-2xl font-bold italic">Zuniq <span className="text-emerald-400">Invoices</span></span>
-              </div>
-              <p className="text-sm font-medium leading-relaxed text-emerald-100/60">
-                Helping freelancers and small agencies grow their businesses since today. Open-source core and nature-inspired design.
-              </p>
-            </div>
-            
-            <div className="flex flex-wrap justify-center gap-12 text-sm font-bold uppercase tracking-widest md:justify-end">
-              <div className="flex flex-col gap-4">
-                <span className="text-emerald-400 text-xs">Product</span>
-                <Link href="/new" className="hover:text-emerald-400 transition-colors">Create</Link>
-                <Link href="/" className="hover:text-emerald-400 transition-colors">History</Link>
-              </div>
-              <div className="flex flex-col gap-4">
-                <span className="text-emerald-400 text-xs">Connect</span>
-                <Link href="/privacy" className="hover:text-emerald-400 transition-colors">Privacy</Link>
-                <a href="mailto:zuniq.studio@gmail.com" className="hover:text-emerald-400 transition-colors">Support</a>
-              </div>
-            </div>
-          </div>
-          
-          <div className="border-t border-white/10 pt-10 text-center text-xs font-bold uppercase tracking-widest text-emerald-100/40">
-            © {new Date().getFullYear()} Zuniq Studio. Hand-cultivated with Gemini.
-          </div>
-        </div>
-      </footer>
+      </main>
     </div>
   );
 }
