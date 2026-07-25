@@ -5,84 +5,109 @@ import { Inter } from 'next/font/google';
 
 const inter = Inter({ subsets: ['latin'] });
 
+// --- Types ---
+type Message = { role: 'ai' | 'user'; content: string };
+type InvoiceData = { sender: string; client: string; items: { desc: string; price: number }[]; tax: number };
+
 export default function AIStudioWorkspace() {
-  const [messages, setMessages] = useState([
-    { role: 'ai', content: "Welcome to the Studio, Jawad. 🌿 I'm ready to craft your invoice. Tell me what we're billing for?" }
+  const [messages, setMessages] = useState<Message[]>([
+    { role: 'ai', content: "Greetings, Jawad. 🌿 I'm your Zuniq Studio assistant. Tell me about the project you're billing for—who is the client and what was the service?" }
   ]);
   const [input, setInput] = useState("");
+  const [showPreview, setShowPreview] = useState(false); // Mobile Toggle
+  const [invoice, setInvoice] = useState<InvoiceData>({ sender: "Jawad", client: "", items: [], tax: 0 });
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages]);
+
+  // --- Smart Professional AI Logic ---
+  const processAI = (text: string) => {
+    const lowText = text.toLowerCase();
+    let reply = "";
+    let updated = { ...invoice };
+
+    // 1. Logic for Names
+    if (lowText.includes("my name is") || lowText.includes("i am")) {
+      const name = text.split(/is|am/i)[1]?.trim();
+      updated.sender = name;
+      reply = `Pleased to meet you, ${name}. I've updated the sender details. Now, what is the client's name and the total amount?`;
+    } 
+    // 2. Logic for Items/Price
+    else if (lowText.includes("$") || lowText.includes("aed") || lowText.includes("pkr") || /\d+/.test(text)) {
+      const amount = text.match(/\d+/)?.[0] || "0";
+      updated.items = [...updated.items, { desc: text, price: parseInt(amount) }];
+      reply = `Understood. I've added "${text}" to the line items. Should we apply any specific tax percentage or is this the final total?`;
+    }
+    // 3. Logic for Clients
+    else if (lowText.includes("client is") || lowText.includes("for ")) {
+      const client = text.split(/is|for/i)[1]?.trim();
+      updated.client = client;
+      reply = `Excellent, I've noted ${client} as the client. What specific services did you provide for this invoice?`;
+    }
+    // 4. Default Fallback
+    else {
+      reply = "I've noted that down. To make this invoice professional, could you please provide the specific service description and the currency you'd like to use?";
+    }
+
+    setInvoice(updated);
+    setTimeout(() => {
+      setMessages(prev => [...prev, { role: 'ai', content: reply }]);
+    }, 800);
+  };
 
   const handleSend = () => {
     if (!input.trim()) return;
-    setMessages([...messages, { role: 'user', content: input }]);
+    const userMsg = input;
+    setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
     setInput("");
-    // Simulate AI response for UI feel
-    setTimeout(() => {
-      setMessages(prev => [...prev, { role: 'ai', content: "Got it. I've updated the draft with those details. Does the preview look correct?" }]);
-    }, 1000);
+    processAI(userMsg);
   };
 
   return (
     <div className={`min-h-screen bg-[#f5f7f0] text-slate-800 ${inter.className} flex flex-col overflow-hidden`}>
-      <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes pulse-soft { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
-        .glass-panel { background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(10px); }
-        .paper-shadow { shadow: 0 20px 50px -10px rgba(22, 163, 74, 0.1); }
-        .ellipse-logo { border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; }
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
-      `}} />
-
-      {/* 1. STUDIO NAVBAR */}
-      <nav className="h-20 border-b border-emerald-100 bg-white/70 backdrop-blur-md z-50 px-8 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-3 group">
-          <div className="relative h-10 w-10 flex items-center justify-center">
-            <div className="absolute inset-0 bg-emerald-400 blur-md rounded-full animate-pulse opacity-30"></div>
-            <div className="relative h-8 w-8 bg-white ellipse-logo shadow-sm flex items-center justify-center border border-emerald-100 group-hover:rotate-6 transition-transform">
-              <img src="/logo.png" alt="Zuniq" className="w-6 h-6 object-contain" />
-            </div>
+      {/* 1. COMPACT NAVBAR */}
+      <nav className="h-16 border-b border-emerald-100 bg-white/80 backdrop-blur-md z-50 px-4 md:px-8 flex items-center justify-between">
+        <Link href="/" className="flex items-center gap-2 group">
+          <div className="h-8 w-8 bg-white border border-emerald-100 rounded-full shadow-sm flex items-center justify-center">
+            <img src="/logo.png" alt="Z" className="w-5 h-5 object-contain" />
           </div>
-          <span className="text-xl font-[800] tracking-tighter">Zuniq <span className="text-green-600 italic">Studio</span></span>
+          <span className="font-black text-sm tracking-tighter uppercase italic">Zuniq <span className="text-green-600">Studio</span></span>
         </Link>
         
-        {/* Progress Tracker */}
-        <div className="hidden md:flex items-center gap-4 bg-emerald-50 px-6 py-2 rounded-full border border-emerald-100">
-           <span className="text-[10px] font-black uppercase tracking-widest text-green-700">Invoice Growth</span>
-           <div className="w-32 h-1.5 bg-white rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-emerald-400 to-green-600 w-[65%] rounded-full transition-all duration-1000"></div>
-           </div>
-        </div>
-
-        <div className="flex items-center gap-4">
-          <button className="text-xs font-bold text-slate-400 hover:text-green-600 transition-colors uppercase tracking-widest">Clear</button>
-          <button className="bg-slate-900 text-white px-6 py-2.5 rounded-full text-xs font-bold shadow-lg hover:bg-green-600 transition-all active:scale-95">Save Draft</button>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => setShowPreview(!showPreview)}
+            className="lg:hidden bg-emerald-100 text-green-700 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-200"
+          >
+            {showPreview ? "Back to Chat" : "View Invoice"}
+          </button>
+          <button className="bg-slate-900 text-white px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-green-600 transition-all shadow-md">
+            Save
+          </button>
         </div>
       </nav>
 
-      {/* 2. MAIN WORKSPACE */}
-      <main className="flex-grow flex flex-col lg:flex-row h-[calc(100vh-80px)]">
+      {/* 2. STUDIO WORKSPACE */}
+      <main className="flex-grow flex flex-col lg:flex-row h-[calc(100vh-64px)] relative">
         
-        {/* LEFT: AI CHAT ASSISTANT (The Mind) */}
-        <div className="w-full lg:w-[450px] flex flex-col bg-white border-r border-emerald-50 relative z-20">
-          <div className="p-6 border-b border-emerald-50 bg-[#fcfdfa]/80 flex items-center gap-3">
-             <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
-             <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-800/60">Zuniq Intelligence Active</h2>
+        {/* LEFT: THE CHAT INTERFACE (Primary on Mobile) */}
+        <div className={`w-full lg:w-[450px] flex flex-col bg-white border-r border-emerald-50 z-20 ${showPreview ? 'hidden lg:flex' : 'flex'}`}>
+          <div className="p-4 border-b border-emerald-50 bg-[#fcfdfa] flex items-center justify-between">
+             <div className="flex items-center gap-2">
+                <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse"></div>
+                <h2 className="text-[9px] font-black uppercase tracking-[0.3em] text-emerald-800/60">Professional Assistant</h2>
+             </div>
           </div>
 
-          <div ref={scrollRef} className="flex-grow overflow-y-auto p-6 space-y-8 bg-gradient-to-b from-white to-[#f5f7f0]/30">
+          <div ref={scrollRef} className="flex-grow overflow-y-auto p-4 md:p-6 space-y-6">
             {messages.map((msg, i) => (
               <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[85%] px-5 py-4 rounded-[2rem] text-sm leading-relaxed shadow-sm ${
+                <div className={`max-w-[85%] px-5 py-3.5 rounded-2xl text-sm leading-relaxed shadow-sm ${
                   msg.role === 'user' 
                     ? 'bg-gradient-to-br from-emerald-500 to-green-600 text-white rounded-tr-none font-medium' 
-                    : 'bg-emerald-50 text-slate-700 rounded-tl-none border border-emerald-100/50 italic'
+                    : 'bg-emerald-50/50 text-slate-700 rounded-tl-none border border-emerald-100/50'
                 }`}>
                   {msg.content}
                 </div>
@@ -90,108 +115,97 @@ export default function AIStudioWorkspace() {
             ))}
           </div>
 
-          {/* Luxury Input Bar */}
-          <div className="p-6 bg-white">
-            <div className="relative group">
+          {/* Luxury Input */}
+          <div className="p-4 bg-white border-t border-emerald-50">
+            <div className="relative flex items-center">
               <input 
                 type="text" 
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-                placeholder="Message your assistant..."
-                className="w-full bg-[#f5f7f0] border-2 border-transparent focus:border-emerald-200 rounded-[1.5rem] py-5 px-8 pr-16 focus:outline-none transition-all text-sm placeholder:text-slate-400 font-medium"
+                placeholder="Describe your job details..."
+                className="w-full bg-[#f8faf5] border border-emerald-100 rounded-2xl py-4 px-5 pr-14 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 text-sm"
               />
-              <button 
-                onClick={handleSend}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-3 bg-slate-900 text-white rounded-2xl hover:bg-green-600 transition-all shadow-md active:scale-90"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+              <button onClick={handleSend} className="absolute right-2 p-3 bg-slate-900 text-white rounded-xl hover:bg-green-600 active:scale-90 transition-all">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
               </button>
             </div>
-            <p className="mt-4 text-[9px] text-center text-slate-300 font-bold uppercase tracking-widest">Crafted with precision by Zuniq AI</p>
           </div>
         </div>
 
-        {/* RIGHT: LIVE PAPER PREVIEW (The Craft) */}
-        <div className="flex-grow bg-[#f5f7f0] p-6 md:p-12 overflow-y-auto flex flex-col items-center custom-scrollbar">
-          <div className="w-full max-w-[750px] flex justify-between items-center mb-8">
-             <div className="flex items-center gap-2">
-                <span className="text-[11px] font-black uppercase tracking-[0.2em] text-emerald-800/30">Document View</span>
-             </div>
-             <div className="flex gap-4">
-                <button className="bg-white border border-emerald-100 text-slate-600 px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-emerald-50 transition-all">Templates</button>
-                <button className="bg-gradient-to-r from-emerald-500 to-green-600 text-white px-8 py-2.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-xl hover:scale-105 transition-all">Download PDF</button>
-             </div>
+        {/* RIGHT: THE INVOICE PREVIEW (Hidden on Mobile unless toggled) */}
+        <div className={`flex-grow bg-[#f5f7f0] p-4 md:p-12 overflow-y-auto flex flex-col items-center ${showPreview ? 'flex' : 'hidden lg:flex'}`}>
+          <div className="w-full max-w-[700px] flex justify-between items-center mb-6">
+             <span className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-800/30 italic">Linen Paper Preview</span>
+             <button className="bg-white border border-emerald-200 text-slate-500 px-6 py-2 rounded-full text-[10px] font-black uppercase hover:bg-white transition-all shadow-sm">PDF Settings</button>
           </div>
 
-          {/* THE LUXURY INVOICE SHEET */}
-          <div className="w-full max-w-[750px] bg-white rounded-[1rem] shadow-[0_40px_80px_-20px_rgba(22,163,74,0.12)] border border-emerald-50 min-h-[1000px] p-12 md:p-24 flex flex-col relative overflow-hidden">
-            
-            {/* Top Emerald Detail */}
-            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-400 via-green-500 to-emerald-600"></div>
+          <div className="w-full max-w-[700px] bg-white rounded-sm shadow-[0_30px_70px_-20px_rgba(0,0,0,0.1)] min-h-[900px] p-8 md:p-16 flex flex-col relative">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-green-600"></div>
 
-            <div className="flex justify-between items-start mb-24">
-              <div className="space-y-6">
-                <div className="h-16 w-16 bg-emerald-50 rounded-3xl flex items-center justify-center border border-emerald-100">
-                  <img src="/logo.png" alt="Logo" className="w-10 h-10 opacity-80" />
-                </div>
-                <div className="space-y-1">
-                   <h3 className="text-sm font-bold text-slate-900">Your Business Name</h3>
-                   <p className="text-xs text-slate-400 italic">Registration / Tax ID Pending</p>
-                </div>
+            <div className="flex justify-between items-start mb-20">
+              <div className="h-12 w-12 bg-emerald-50 rounded-lg flex items-center justify-center">
+                 <img src="/logo.png" alt="Logo" className="w-8 h-8 opacity-40 grayscale" />
               </div>
-              
               <div className="text-right">
-                <h1 className="text-5xl font-[900] tracking-tighter text-slate-900 uppercase italic mb-4">Invoice</h1>
-                <div className="space-y-1">
-                  <p className="text-[10px] font-black text-green-600 uppercase tracking-widest bg-emerald-50 px-3 py-1 rounded-full inline-block">Draft #ZIQ-8842</p>
-                  <p className="text-[10px] font-bold text-slate-400 block mt-2">Issued: {new Date().toLocaleDateString()}</p>
-                </div>
+                <h1 className="text-3xl font-[900] tracking-tighter text-slate-900 uppercase italic">Invoice</h1>
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-2">No. ZIQ-{Math.floor(Math.random()*9000)}</p>
               </div>
             </div>
 
-            {/* Table Area */}
+            <div className="grid grid-cols-2 gap-10 mb-20">
+               <div>
+                  <p className="text-[9px] font-black text-emerald-600 uppercase tracking-widest mb-3">From</p>
+                  <p className="text-sm font-bold text-slate-900">{invoice.sender || "Jawad Studio"}</p>
+                  <p className="text-xs text-slate-400">Freelance Designer</p>
+               </div>
+               <div className="text-right">
+                  <p className="text-[9px] font-black text-emerald-600 uppercase tracking-widest mb-3">Bill To</p>
+                  <p className="text-sm font-bold text-slate-900">{invoice.client || "Client Name Pending"}</p>
+                  <p className="text-xs text-slate-400 italic">Address details in chat...</p>
+               </div>
+            </div>
+
             <div className="flex-grow">
                <table className="w-full text-left">
                   <thead>
-                    <tr className="border-b-2 border-emerald-50">
-                      <th className="py-6 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Description of Service</th>
-                      <th className="py-6 text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 text-right">Amount</th>
+                    <tr className="border-b border-slate-100">
+                      <th className="py-4 text-[10px] font-black uppercase text-slate-400">Description</th>
+                      <th className="py-4 text-[10px] font-black uppercase text-slate-400 text-right">Total</th>
                     </tr>
                   </thead>
-                  <tbody>
-                    <tr className="border-b border-slate-50">
-                      <td className="py-12 text-sm font-medium text-slate-400 italic">Mention your tasks in the chat to populate this area...</td>
-                      <td className="py-12 text-xl font-[900] text-slate-200 text-right tracking-tighter italic">$0.00</td>
-                    </tr>
+                  <tbody className="divide-y divide-slate-50">
+                    {invoice.items.length === 0 ? (
+                      <tr>
+                        <td className="py-10 text-xs text-slate-300 italic">Waiting for service details...</td>
+                        <td className="py-10 text-xs text-slate-200 text-right">$0.00</td>
+                      </tr>
+                    ) : (
+                      invoice.items.map((item, idx) => (
+                        <tr key={idx}>
+                          <td className="py-5 text-sm font-medium text-slate-700">{item.desc}</td>
+                          <td className="py-5 text-sm font-bold text-slate-900 text-right">${item.price.toLocaleString()}</td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                </table>
             </div>
 
-            {/* Total Balance Area */}
-            <div className="mt-20 pt-12 border-t-4 border-emerald-50 flex justify-between items-end">
-              <div className="space-y-2">
-                <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em]">Total Outstanding</p>
-                <p className="text-6xl font-[1000] text-slate-900 tracking-tightest italic">$0.00</p>
+            <div className="mt-10 pt-10 border-t border-emerald-50 flex justify-between items-end">
+              <div>
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Amount Due</p>
+                <p className="text-5xl font-[1000] text-slate-900 tracking-tightest italic">
+                  ${invoice.items.reduce((sum, item) => sum + item.price, 0).toLocaleString()}
+                </p>
               </div>
-              <div className="text-right space-y-6">
-                 <div className="h-12 w-48 bg-emerald-950/5 border border-emerald-900/10 rounded-2xl flex items-center justify-center text-emerald-900/40 text-[10px] font-black uppercase tracking-[0.3em] italic">
-                   Signature Required
-                 </div>
-                 <p className="text-[10px] font-bold text-slate-400">Thank you for choosing Zuniq Studio.</p>
+              <div className="text-right">
+                 <div className="w-32 h-10 border-b-2 border-emerald-100 ml-auto mb-2 italic text-[10px] text-slate-300 flex items-end justify-center">Digital Signature</div>
+                 <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Verified by Zuniq AI</p>
               </div>
-            </div>
-
-            {/* Bottom Graphic Detail */}
-            <div className="absolute bottom-8 left-12">
-               <div className="flex gap-2">
-                  <div className="w-1 h-1 bg-emerald-200 rounded-full"></div>
-                  <div className="w-8 h-1 bg-emerald-100 rounded-full"></div>
-               </div>
             </div>
           </div>
         </div>
-
       </main>
     </div>
   );
